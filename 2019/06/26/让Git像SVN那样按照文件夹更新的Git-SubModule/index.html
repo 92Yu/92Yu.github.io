@@ -1,0 +1,1286 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Tools,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="阿西BUG的博客" type="application/atom+xml">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="项目的版本库在某些情况虾需要引用其他版本库中的文件，例如公司积累了一套常用的函数库，被多个项目调用，显然这个函数库的代码不能直接放到某个项目的代码中，而是要独立为一个代码库，那么其他项目要调用公共函数库该如何处理呢？分别把公共函数库的文件拷贝到各自的项目中会造成冗余，丢弃了公共函数库的维护历史，这显然不是好的方法。">
+<meta name="keywords" content="Tools">
+<meta property="og:type" content="article">
+<meta property="og:title" content="让Git像SVN那样按照文件夹更新的Git SubModule">
+<meta property="og:url" content="http://blog.92yu.win/2019/06/26/让Git像SVN那样按照文件夹更新的Git-SubModule/index.html">
+<meta property="og:site_name" content="阿西BUG的博客">
+<meta property="og:description" content="项目的版本库在某些情况虾需要引用其他版本库中的文件，例如公司积累了一套常用的函数库，被多个项目调用，显然这个函数库的代码不能直接放到某个项目的代码中，而是要独立为一个代码库，那么其他项目要调用公共函数库该如何处理呢？分别把公共函数库的文件拷贝到各自的项目中会造成冗余，丢弃了公共函数库的维护历史，这显然不是好的方法。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-11-23T16:16:30.288Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="让Git像SVN那样按照文件夹更新的Git SubModule">
+<meta name="twitter:description" content="项目的版本库在某些情况虾需要引用其他版本库中的文件，例如公司积累了一套常用的函数库，被多个项目调用，显然这个函数库的代码不能直接放到某个项目的代码中，而是要独立为一个代码库，那么其他项目要调用公共函数库该如何处理呢？分别把公共函数库的文件拷贝到各自的项目中会造成冗余，丢弃了公共函数库的维护历史，这显然不是好的方法。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.92yu.win/2019/06/26/让Git像SVN那样按照文件夹更新的Git-SubModule/">
+
+
+
+
+
+  <title>让Git像SVN那样按照文件夹更新的Git SubModule | 阿西BUG的博客</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1272988818&web_id=1272988818" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+    <a href="https://github.com/92Yu"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">阿西BUG的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">九华不至一线天，井底妄取两星辰！天意难随恍虚梦，壮志未酬怎回头？！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            列表
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.92yu.win/2019/06/26/让Git像SVN那样按照文件夹更新的Git-SubModule/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="阿西BUG">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="http://image.hoacaini.com/blog/HeadPic.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="阿西BUG的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                让Git像SVN那样按照文件夹更新的Git SubModule
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-26T23:11:14+08:00">
+                2019-06-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  项目的版本库在某些情况虾需要引用其他版本库中的文件，例如公司积累了一套常用的函数库，被多个项目调用，显然这个函数库的代码不能直接放到某个项目的代码中，而是要独立为一个代码库，那么其他项目要调用公共函数库该如何处理呢？分别把公共函数库的文件拷贝到各自的项目中会造成冗余，丢弃了公共函数库的维护历史，这显然不是好的方法。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<blockquote>
+<p><strong>本文首发于我的个人Blog<a href="http://blog.92yu.win">阿西BUG</a>，欢迎大家批评指正</strong></p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近项目出现了新的需求，需要在一个Creator框架工程中，集成多个子游戏。<br><strong>优点</strong>：所有游戏集中管理，避免出现一旦框架更改，所有子游戏工程需要全部改一遍<br><strong>痛点</strong>：如果子游戏数量过多，会导致项目工程巨大，打开编译等速度过慢<br><strong>目的</strong>：框架自身和各子游戏需要能够独立更新，互不影响  </p>
+<blockquote>
+<p>引用一段《Git权威指南》的话：<br>项目的版本库在某些情况虾需要引用其他版本库中的文件，例如公司积累了一套常用的函数库，被多个项目调用，显然这个函数库的代码不能直接放到某个项目的代码中，而是要独立为一个代码库，那么其他项目要调用公共函数库该如何处理呢？分别把公共函数库的文件拷贝到各自的项目中会造成冗余，丢弃了公共函数库的维护历史，这显然不是好的方法。  </p>
+</blockquote>
+<p><em>Git Submodule功能刚刚开始学习可能觉得有点怪异，所以本文会把每一步的操作的命令和结果都用代码的形式展现给大家，以便更好的理解。</em></p>
+<h2 id="1-学习Git-SubModule"><a href="#1-学习Git-SubModule" class="headerlink" title="1. 学习Git SubModule"></a>1. 学习Git SubModule</h2><p><strong><em>说明：本例采用两个项目以及两个公共类库演示对submodule的操作。</em></strong></p>
+<h3 id="1-1-创建Git-SubModule示例项目"><a href="#1-1-创建Git-SubModule示例项目" class="headerlink" title="1.1 创建Git SubModule示例项目"></a>1.1 创建Git SubModule示例项目</h3><h4 id="1-1-1-准备环境"><a href="#1-1-1-准备环境" class="headerlink" title="1.1.1 准备环境"></a>1.1.1 准备环境</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop</span><br><span class="line">λ mkdir repo</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop</span><br><span class="line">λ cd repo\</span><br></pre></td></tr></table></figure>
+<p>创建本地仓库：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\repo</span><br><span class="line">λ git --git-dir=lib1.git init --bare</span><br><span class="line">Initialized empty Git repository in C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\repo</span><br><span class="line">λ git --git-dir=lib2.git init --bare</span><br><span class="line">Initialized empty Git repository in C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\repo</span><br><span class="line">λ git --git-dir=project1.git init --bare</span><br><span class="line">Initialized empty Git repository in C:/Users/TAL-YINGYU/Desktop/repo/project1.git/</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\repo</span><br><span class="line">λ git --git-dir=project2.git init --bare</span><br><span class="line">Initialized empty Git repository in C:/Users/TAL-YINGYU/Desktop/repo/project2.git/</span><br></pre></td></tr></table></figure></p>
+<p>初始化工作区：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop</span><br><span class="line">λ mkdir workSpaceLocal</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop</span><br><span class="line">λ cd workSpaceLocal\</span><br></pre></td></tr></table></figure></p>
+<h4 id="1-1-2-初始化项目"><a href="#1-1-2-初始化项目" class="headerlink" title="1.1.2 初始化项目"></a>1.1.2 初始化项目</h4><p>初始化project1：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\project</span><br><span class="line">project1.git\  project2.git\</span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\project1.git\</span><br><span class="line">Cloning into &apos;project1&apos;...</span><br><span class="line">warning: You appear to have cloned an empty repository.</span><br><span class="line">done.</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd project1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ echo &quot;project1&quot; &gt; project1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ ls</span><br><span class="line">project1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git add project1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;init project1&quot;</span><br><span class="line">[master (root-commit) 89fcc18] init project1</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"> create mode 100644 project1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git push origin master</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 227 bytes | 227.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\</span><br><span class="line"> * [new branch]      master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>初始化project2：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\project2.git\</span><br><span class="line">Cloning into &apos;project2&apos;...</span><br><span class="line">warning: You appear to have cloned an empty repository.</span><br><span class="line">done.</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd project2\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ echo &quot;project2&quot; &gt; project2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ ls</span><br><span class="line">project2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git add project2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;init project2&quot;</span><br><span class="line">[master (root-commit) fdefcbe] init project2</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"> create mode 100644 project2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git push origin master</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 229 bytes | 229.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project2.git\</span><br><span class="line"> * [new branch]      master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<h4 id="1-1-3-初始化公共类库"><a href="#1-1-3-初始化公共类库" class="headerlink" title="1.1.3 初始化公共类库"></a>1.1.3 初始化公共类库</h4><p>初始化lib1：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\lib1.git\</span><br><span class="line">Cloning into &apos;lib1&apos;...</span><br><span class="line">warning: You appear to have cloned an empty repository.</span><br><span class="line">done.</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd lib1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib1 (master -&gt; origin)</span><br><span class="line">λ echo &quot;I&apos;m lib1.&quot; &gt; lib1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib1 (master -&gt; origin)</span><br><span class="line">λ git add lib1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib1 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;init lib1&quot;</span><br><span class="line">[master (root-commit) 1ffa3a9] init lib1</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"> create mode 100644 lib1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib1 (master -&gt; origin)</span><br><span class="line">λ git push origin master</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 222 bytes | 222.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\lib1.git\</span><br><span class="line"> * [new branch]      master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>初始化lib2：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\lib2.git\</span><br><span class="line">Cloning into &apos;lib2&apos;...</span><br><span class="line">warning: You appear to have cloned an empty repository.</span><br><span class="line">done.</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd lib2\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ echo &quot;I&apos;m lib 2&quot; &gt; lib2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ git add lib2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;init lib2&quot;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;init lib2&quot;</span><br><span class="line">[master (root-commit) 1f05672] init lib2</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"> create mode 100644 lib2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ git push origin master</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 222 bytes | 222.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\lib2.git\</span><br><span class="line"> * [new branch]      master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-2-为主项目添加SubModules"><a href="#1-2-为主项目添加SubModules" class="headerlink" title="1.2 为主项目添加SubModules"></a>1.2 为主项目添加SubModules</h3><h4 id="1-2-1-为project1添加lib1和lib2"><a href="#1-2-1-为project1添加lib1和lib2" class="headerlink" title="1.2.1 为project1添加lib1和lib2"></a>1.2.1 为project1添加lib1和lib2</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\lib2 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd project1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git submodule add C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1/lib1&apos;...</span><br><span class="line">done.</span><br><span class="line">warning: LF will be replaced by CRLF in .gitmodules.</span><br><span class="line">The file will have its original line endings in your working directory</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git submodule add C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1/lib2&apos;...</span><br><span class="line">done.</span><br><span class="line">warning: LF will be replaced by CRLF in .gitmodules.</span><br><span class="line">The file will have its original line endings in your working directory</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ ls</span><br><span class="line">lib1/  lib2/  project1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes to be committed:</span><br><span class="line">  (use &quot;git reset HEAD &lt;file&gt;...&quot; to unstage)</span><br><span class="line"></span><br><span class="line">        new file:   .gitmodules</span><br><span class="line">        new file:   lib1</span><br><span class="line">        new file:   lib2</span><br><span class="line"></span><br><span class="line">#看一看公共类库内容是不是刚才我们初始化的</span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cat lib1\</span><br><span class="line">.git           lib1-infos.md</span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cat lib1\lib1-infos.md</span><br><span class="line">&quot;I&apos;m lib1.&quot;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cat lib2\lib2-infos.md</span><br><span class="line">&quot;I&apos;m lib 2&quot;</span><br></pre></td></tr></table></figure>
+<p>到目前为止，我们已经使用<code>git submodule add</code>命令为<strong>project1</strong>添加了两个公共类库，通过查看当前状态发现添加了一个新的文件（.gitmodules）和两个问题件夹（lib1， lib2），那么.gitmodules文件是做什么用的呢？我们来看一下内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cat .gitmodules</span><br><span class="line">[submodule &quot;lib1&quot;]</span><br><span class="line">        path = lib1</span><br><span class="line">        url = C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">[submodule &quot;lib2&quot;]</span><br><span class="line">        path = lib2</span><br><span class="line">        url = C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br></pre></td></tr></table></figure></p>
+<p>原来这里面存储的都是每个submodule的相关信息，知道在当前项目的位置以及远程仓库地址<br>ok，现在我们把project1的更改提交到远程仓库<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;add submodules[lib1,lib2] to project1&quot;</span><br><span class="line">[master b0389b8] add submodules[lib1,lib2] to project1</span><br><span class="line"> 3 files changed, 8 insertions(+)</span><br><span class="line"> create mode 100644 .gitmodules</span><br><span class="line"> create mode 160000 lib1</span><br><span class="line"> create mode 160000 lib2</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 4, done.</span><br><span class="line">Counting objects: 100% (4/4), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 449 bytes | 449.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\</span><br><span class="line">   89fcc18..b0389b8  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p><strong><em>那么问题来了，如果一个项目中已经引入了公共类库，项目组其他成员如何clone这个项目呢？</em></strong></p>
+<h3 id="1-3-模拟clone带有submodule的仓库"><a href="#1-3-模拟clone带有submodule的仓库" class="headerlink" title="1.3 模拟clone带有submodule的仓库"></a>1.3 模拟clone带有submodule的仓库</h3><p>模拟组员m：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ git clone ..\repo\project1.git project1-b</span><br><span class="line">Cloning into &apos;project1-b&apos;...</span><br><span class="line">done.</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ ls</span><br><span class="line">lib1/  lib2/  project1/  project1-b/  project2/</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal</span><br><span class="line">λ cd project1-b\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git submodule</span><br><span class="line">-1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb lib1</span><br><span class="line">-1f05672f7ff92395fcbbe325ab2cda7405da40e8 lib2</span><br></pre></td></tr></table></figure></p>
+<p>可以看得出submodule的状态是hash码和文件目录，但是前面有一个 - 号，这表示这个子模块还没有被检出<br>ok，我们检出project1-b的submodule<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git submodule init</span><br><span class="line">Submodule &apos;lib1&apos; (C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/) registered for path &apos;lib1&apos;</span><br><span class="line">Submodule &apos;lib2&apos; (C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/) registered for path &apos;lib2&apos;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git submodule update</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1-b/lib1&apos;...</span><br><span class="line">done.</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1-b/lib2&apos;...</span><br><span class="line">done.</span><br><span class="line">Submodule path &apos;lib1&apos;: checked out &apos;1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb&apos;</span><br><span class="line">Submodule path &apos;lib2&apos;: checked out &apos;1f05672f7ff92395fcbbe325ab2cda7405da40e8&apos;</span><br></pre></td></tr></table></figure></p>
+<p>我们来看下<code>.git/config</code>文件的内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ cat .git/config</span><br><span class="line">[core]</span><br><span class="line">        repositoryformatversion = 0</span><br><span class="line">        filemode = false</span><br><span class="line">        bare = false</span><br><span class="line">        logallrefupdates = true</span><br><span class="line">        symlinks = false</span><br><span class="line">        ignorecase = true</span><br><span class="line">[remote &quot;origin&quot;]</span><br><span class="line">        url = C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\\repo\\project1.git</span><br><span class="line">        fetch = +refs/heads/*:refs/remotes/origin/*</span><br><span class="line">[branch &quot;master&quot;]</span><br><span class="line">        remote = origin</span><br><span class="line">        merge = refs/heads/master</span><br><span class="line">[submodule &quot;lib1&quot;]</span><br><span class="line">        active = true</span><br><span class="line">        url = C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">[submodule &quot;lib2&quot;]</span><br><span class="line">        active = true</span><br><span class="line">        url = C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br></pre></td></tr></table></figure></p>
+<p>可以看到里面有最新的submodule信息<br>我们来验证下本地项目中公共类库是否存在：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ cat lib1\lib1-infos.md lib2\lib2-infos.md</span><br><span class="line">&quot;I&apos;m lib1.&quot;</span><br><span class="line">&quot;I&apos;m lib 2&quot;</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-4-修改submodule"><a href="#1-4-修改submodule" class="headerlink" title="1.4 修改submodule"></a>1.4 修改submodule</h3><p>继续模拟组员m修改submodule的内容<br>先看下当前submodule的状态<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ cd lib1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (HEAD detached at 1ffa3a9 -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">HEAD detached at 1ffa3a9</span><br><span class="line">nothing to commit, working tree clean</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>这个时候HEAD直接指向一个commit，Git会警告我们出现了所谓的detached HEAD现象。表示当前git状态不属于任何一个分支。  </p>
+</blockquote>
+<p>那么为什么会出现这个情况呢？ 继续往下看：<br>git对于submodule有特殊的处理方式，在一个主项目中引入submoudle的时候，其实git做了3件事：</p>
+<ul>
+<li>记录引用的仓库</li>
+<li>记录主项目中submodule的目录位置</li>
+<li>记录引用submodule的 <strong>commit id</strong>  </li>
+</ul>
+<p>在project1中push了之后，其实就是执行了更新引用的commit id，然后project1-b在clone的时候获取到了submodule的commit id，然后执行git submodule update的时候，git就根据gitlink获取submodule的commit id，最后获取submodule的文件，所以clone之后不在任何分支上，但是master分支的commit id和HEAD保持一致。  </p>
+<p>现在我们要先切换到master分支：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (HEAD detached at 1ffa3a9 -&gt; origin)</span><br><span class="line">λ git checkout master</span><br><span class="line">Previous HEAD position was 1ffa3a9 init lib1</span><br><span class="line">Switched to branch &apos;master&apos;</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br></pre></td></tr></table></figure></p>
+<p>组员m修改lib1：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ cat lib1-infos.md</span><br><span class="line">&quot;I&apos;m lib1.&quot;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ echo &quot;modified by developer m&quot; &gt; lib1-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ cat lib1-infos.md</span><br><span class="line">&quot;modified by developer m&quot;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ git commit -a -m &quot;modify lib1-infos.md by developer m&quot;</span><br><span class="line">[master f220249] modify lib1-infos.md by developer m</span><br><span class="line"> 1 file changed, 1 insertion(+), 1 deletion(-)</span><br></pre></td></tr></table></figure></p>
+<p>在主项目中将刚刚修改的submodule提交会稍微繁琐一些。<br>在push之前，我们先看看project1-b的状态<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br></pre></td></tr></table></figure></p>
+<p>lib1(new commits)表示lib1有新的提交，这个比较特殊。<br>再看看project1-b主项目的变化<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git diff</span><br><span class="line">diff --git a/lib1 b/lib1</span><br><span class="line">index 1ffa3a9..f220249 160000</span><br><span class="line">--- a/lib1</span><br><span class="line">+++ b/lib1</span><br><span class="line">@@ -1 +1 @@</span><br><span class="line">-Subproject commit 1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb</span><br><span class="line">+Subproject commit f220249eb39266a4fdc8e46a1164613a953ac3a4</span><br></pre></td></tr></table></figure></p>
+<p>从diff的结果可以看出，lib1的commit id从原来的<strong>1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb</strong>更新为<strong>f220249eb39266a4fdc8e46a1164613a953ac3a4</strong>  </p>
+<p><strong><em>注意：</em></strong> 这个时候，如果我们执行了<code>git submodule update</code>操作，那么lib1会还原到<strong>1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb</strong>  </p>
+<p>这样的话，我们刚刚的修改是不是就丢失了呢？<br>其实并不会，因为刚刚我们已经提交到了master分支，只需要再执行<code>git checkout master</code>就可以了  </p>
+<p>现在我们把lib1的修改提交到仓库<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ cd lib1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\lib1 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 5, done.</span><br><span class="line">Counting objects: 100% (5/5), done.</span><br><span class="line">Writing objects: 100% (3/3), 291 bytes | 291.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">   dd43aec..f220249  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>千万不要以为到这里就结束了，后面还有很重要的一步,提交project1-b引用的submodule的commit id：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git add .</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;update lib1 to lastest commit id&quot;</span><br><span class="line">[master 3a6818e] update lib1 to lastest commit id</span><br><span class="line"> 1 file changed, 1 insertion(+), 1 deletion(-)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (2/2), 253 bytes | 253.00 KiB/s, done.</span><br><span class="line">Total 2 (delta 1), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git</span><br><span class="line">   b0389b8..3a6818e  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>OK，现在大功告成，我们已经成功的在项目project1-b中修改了公共仓库lib1，并且把最新的lib1的commit id提交到了仓库。  </p>
+<p>接下来我们来看看project1怎么获取submodule。</p>
+<h3 id="1-5-更新主项目的submodule"><a href="#1-5-更新主项目的submodule" class="headerlink" title="1.5 更新主项目的submodule"></a>1.5 更新主项目的submodule</h3><p>首先进入project1的目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ cd ..\project1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git pull</span><br><span class="line">remote: Enumerating objects: 3, done.</span><br><span class="line">remote: Counting objects: 100% (3/3), done.</span><br><span class="line">remote: Compressing objects: 100% (2/2), done.</span><br><span class="line">remote: Total 2 (delta 1), reused 0 (delta 0)</span><br><span class="line">Unpacking objects: 100% (2/2), done.</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\</span><br><span class="line">   b0389b8..3a6818e  master     -&gt; origin/master</span><br><span class="line">Fetching submodule lib1</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/repo/lib1</span><br><span class="line">   1ffa3a9..f220249  master     -&gt; origin/master</span><br><span class="line">Updating b0389b8..3a6818e</span><br><span class="line">Fast-forward</span><br><span class="line"> lib1 | 2 +-</span><br><span class="line"> 1 file changed, 1 insertion(+), 1 deletion(-)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br></pre></td></tr></table></figure></p>
+<p>可以看出，我运行了<code>git pull</code>和<code>git status</code>获取了远程仓库最新的源码，并且看到本地的状态为modified，这是为什么呢？<br>我们来比较一下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git diff</span><br><span class="line">diff --git a/lib1 b/lib1</span><br><span class="line">index f220249..1ffa3a9 160000</span><br><span class="line">--- a/lib1</span><br><span class="line">+++ b/lib1</span><br><span class="line">@@ -1 +1 @@</span><br><span class="line">-Subproject commit f220249eb39266a4fdc8e46a1164613a953ac3a4</span><br><span class="line">+Subproject commit 1ffa3a92c147a2d09fadbc5129389cc6fd1b95cb</span><br></pre></td></tr></table></figure></p>
+<p>从比较结果来看，是因为submodule的commit id更改了，我们前面提到，主项目更新submodule的内容时，首先要提交submodule的内容，然后再更新主项目中引用的submodule的commit id。<br>现在我们看到的不同，就是因为刚才更改了project1-b的submodule commit id。<br>ok，我们来更新一下project1的submodules：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git submodule update</span><br><span class="line">Submodule path &apos;lib1&apos;: checked out &apos;f220249eb39266a4fdc8e46a1164613a953ac3a4&apos;</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">nothing to commit, working tree clean</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-6-为project2添加submodules-lib1和lib2"><a href="#1-6-为project2添加submodules-lib1和lib2" class="headerlink" title="1.6 为project2添加submodules lib1和lib2"></a>1.6 为project2添加submodules lib1和lib2</h3><p>话不多说，直接上代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd ..\project2\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git submodule add C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project2/lib1&apos;...</span><br><span class="line">done.</span><br><span class="line">warning: LF will be replaced by CRLF in .gitmodules.</span><br><span class="line">The file will have its original line endings in your working directory</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git submodule add C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br><span class="line">Cloning into &apos;C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project2/lib2&apos;...</span><br><span class="line">done.</span><br><span class="line">warning: LF will be replaced by CRLF in .gitmodules.</span><br><span class="line">The file will have its original line endings in your working directory</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ ls</span><br><span class="line">lib1/  lib2/  project2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git submodule init</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes to be committed:</span><br><span class="line">  (use &quot;git reset HEAD &lt;file&gt;...&quot; to unstage)</span><br><span class="line"></span><br><span class="line">        new file:   .gitmodules</span><br><span class="line">        new file:   lib1</span><br><span class="line">        new file:   lib2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git commit -a -m &quot;add submodules(lib1 and lib2)&quot;</span><br><span class="line">[master 12516ae] add submodules(lib1 and lib2)</span><br><span class="line"> 3 files changed, 8 insertions(+)</span><br><span class="line"> create mode 100644 .gitmodules</span><br><span class="line"> create mode 160000 lib1</span><br><span class="line"> create mode 160000 lib2</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 4, done.</span><br><span class="line">Counting objects: 100% (4/4), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (3/3), 440 bytes | 440.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project2.git\</span><br><span class="line">   fdefcbe..12516ae  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>相信上面的代码都很熟悉了，就不过多展开了。</p>
+<h3 id="1-7-修改lib1和lib2并同步到project1和project2"><a href="#1-7-修改lib1和lib2并同步到project1和project2" class="headerlink" title="1.7 修改lib1和lib2并同步到project1和project2"></a>1.7 修改lib1和lib2并同步到project1和project2</h3><blockquote>
+<p>我们假如，组员n同时负责peoject1和project2，有可能出现peoject1的某个时候发现lib1或者lib2有个bug，并且这个bug可能会影响很多需求模块，那么我们应该怎么办呢？  </p>
+</blockquote>
+<p>现在假设需求如下：</p>
+<ul>
+<li>在lib1中添加一个文件，README，用来描述lib</li>
+<li>在lib2中的lib2-infos.md添加以下描述语句：“学习git submodule的修改，同步功能”  </li>
+</ul>
+<h4 id="1-7-1-在lib1中添加一个文件"><a href="#1-7-1-在lib1中添加一个文件" class="headerlink" title="1.7.1 在lib1中添加一个文件"></a>1.7.1 在lib1中添加一个文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ cd lib1\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ echo &quot;lib1 README&quot; &gt; README</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ ls</span><br><span class="line">lib1-infos.md  README</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ git add README</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;add file README&quot;</span><br><span class="line">[master 139f263] add file README</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"> create mode 100644 README</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 4, done.</span><br><span class="line">Counting objects: 100% (4/4), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (3/3), 297 bytes | 297.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/</span><br><span class="line">   f220249..139f263  master -&gt; master</span><br></pre></td></tr></table></figure>
+<p>前面的文章提到，这个时候我们只完成了第一步，还有很重要的更新lib1的commit id 一步：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git add lib1</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;update lib1 to lastest commit id&quot;</span><br><span class="line">[master a29cc13] update lib1 to lastest commit id</span><br><span class="line"> 1 file changed, 1 insertion(+), 1 deletion(-)</span><br><span class="line"> </span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (2/2), 251 bytes | 251.00 KiB/s, done.</span><br><span class="line">Total 2 (delta 1), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project2.git\</span><br><span class="line">   12516ae..a29cc13  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<h4 id="1-7-2-在lib2的lib2-infos添加内容"><a href="#1-7-2-在lib2的lib2-infos添加内容" class="headerlink" title="1.7.2 在lib2的lib2-infos添加内容"></a>1.7.2 在lib2的lib2-infos添加内容</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ cd lib2</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib2 (master -&gt; origin)</span><br><span class="line">λ echo &quot;学习git submodule的修改，同步功能&quot; &gt;&gt; lib2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib2 (master -&gt; origin)</span><br><span class="line">λ git add lib2-infos.md</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;add descript sentence&quot;</span><br><span class="line">[master 5d24031] add descript sentence</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib2 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 5, done.</span><br><span class="line">Counting objects: 100% (5/5), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (3/3), 307 bytes | 307.00 KiB/s, done.</span><br><span class="line">Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/</span><br><span class="line">   1f05672..5d24031  master -&gt; master</span><br><span class="line">   </span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2\lib2 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib2 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git add lib2</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git commit -m &quot;update lib2 to lastest commit id&quot;</span><br><span class="line">[master 1f0f0f4] update lib2 to lastest commit id</span><br><span class="line"> 1 file changed, 1 insertion(+), 1 deletion(-)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (2/2), 253 bytes | 253.00 KiB/s, done.</span><br><span class="line">Total 2 (delta 1), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project2.git\</span><br><span class="line">   a29cc13..1f0f0f4  master -&gt; master</span><br></pre></td></tr></table></figure>
+<h3 id="1-8-在project1中同步peoject2的lib1和lib2的修改"><a href="#1-8-在project1中同步peoject2的lib1和lib2的修改" class="headerlink" title="1.8 在project1中同步peoject2的lib1和lib2的修改"></a>1.8 在project1中同步peoject2的lib1和lib2的修改</h3><p>现在project2里lib1和lib2的更改已经提交了，我们来更新project1的submodules（实际情况可能会有很多项目需要更新）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ cd ..\project1</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git pull</span><br><span class="line">Already up to date.</span><br></pre></td></tr></table></figure></p>
+<p>什么情况？？？明明在project2中lib1和lib2已经更新了呀！为什么project1执行<code>git pull</code>得不到任何改动呢？</p>
+<p>我们来分析一下，首先来看下project1和project2的submodule状态：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#project1</span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git submodule</span><br><span class="line"> f220249eb39266a4fdc8e46a1164613a953ac3a4 lib1 (remotes/origin/HEAD)</span><br><span class="line"> 1f05672f7ff92395fcbbe325ab2cda7405da40e8 lib2 (heads/master)</span><br><span class="line"> </span><br><span class="line">#project2</span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project2 (master -&gt; origin)</span><br><span class="line">λ git submodule</span><br><span class="line"> 139f263f4c444d140d3ca3efe7d949f4b2a5b77b lib1 (heads/master)</span><br><span class="line"> 5d2403124046f72b364b0355717013c8221d1fbd lib2 (heads/master)</span><br></pre></td></tr></table></figure></p>
+<p>区别：</p>
+<ul>
+<li>commit id 各不相同</li>
+<li>lib1 所处的分支不相同</li>
+</ul>
+<h4 id="1-8-1-更新project1的lib1和lib2"><a href="#1-8-1-更新project1的lib1和lib2" class="headerlink" title="1.8.1 更新project1的lib1和lib2"></a>1.8.1 更新project1的lib1和lib2</h4><p>还记得刚才在project2中修改的时候，我们都是在master分支上操作的，那么目前project1中的lib1不在任何分支，所以我们先切换到master分支：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd lib1</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1\lib1 (HEAD detached at f220249 -&gt; origin)</span><br><span class="line">λ git checkout master</span><br><span class="line">Previous HEAD position was f220249 modify lib1-infos.md by developer m</span><br><span class="line">Switched to branch &apos;master&apos;</span><br><span class="line">Your branch is behind &apos;origin/master&apos; by 2 commits, and can be fast-forwarded.</span><br><span class="line">  (use &quot;git pull&quot; to update your local branch)</span><br></pre></td></tr></table></figure></p>
+<p>果然切换分支就发现了我们当前已经落后了两个commit( <em>我们刚刚在project2中push了 2 次</em> )了!<br>那么还等什么？赶紧更新啊<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1\lib1 (master -&gt; origin)</span><br><span class="line">λ git pull</span><br><span class="line">remote: Enumerating objects: 4, done.</span><br><span class="line">remote: Counting objects: 100% (4/4), done.</span><br><span class="line">remote: Compressing objects: 100% (2/2), done.</span><br><span class="line">remote: Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">Unpacking objects: 100% (3/3), done.</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/repo/lib1</span><br><span class="line">   f220249..139f263  master     -&gt; origin/master</span><br><span class="line">Updating 1ffa3a9..139f263</span><br><span class="line">Fast-forward</span><br><span class="line"> README        | 1 +</span><br><span class="line"> lib1-infos.md | 2 +-</span><br><span class="line"> 2 files changed, 2 insertions(+), 1 deletion(-)</span><br><span class="line"> create mode 100644 README</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1\lib1 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git diff</span><br><span class="line">diff --git a/lib1 b/lib1</span><br><span class="line">index f220249..139f263 160000</span><br><span class="line">--- a/lib1</span><br><span class="line">+++ b/lib1</span><br><span class="line">@@ -1 +1 @@</span><br><span class="line">-Subproject commit f220249eb39266a4fdc8e46a1164613a953ac3a4</span><br><span class="line">+Subproject commit 139f263f4c444d140d3ca3efe7d949f4b2a5b77b</span><br></pre></td></tr></table></figure></p>
+<p>ok，可以看得出lib1的commit id已经随着pull的操作和project2目前的状态一致，说明已经同步到了。<br>那么我们用同样的办法更新lib2吧：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd lib2\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1\lib2 (master -&gt; origin)</span><br><span class="line">λ git pull</span><br><span class="line">remote: Enumerating objects: 5, done.</span><br><span class="line">remote: Counting objects: 100% (5/5), done.</span><br><span class="line">remote: Compressing objects: 100% (2/2), done.</span><br><span class="line">remote: Total 3 (delta 0), reused 0 (delta 0)</span><br><span class="line">Unpacking objects: 100% (3/3), done.</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/repo/lib2</span><br><span class="line">   1f05672..5d24031  master     -&gt; origin/master</span><br><span class="line">Updating 1f05672..5d24031</span><br><span class="line">Fast-forward</span><br><span class="line"> lib2-infos.md | 1 +</span><br><span class="line"> 1 file changed, 1 insertion(+)</span><br></pre></td></tr></table></figure></p>
+<h4 id="1-8-2-更新project1中的submodule引用"><a href="#1-8-2-更新project1中的submodule引用" class="headerlink" title="1.8.2 更新project1中的submodule引用"></a>1.8.2 更新project1中的submodule引用</h4><p>在1.7.1中，我们更新了project1中lib1和lib2的最新版本，现在要把最新的commit id 保存在project1中，以保持最新的引用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1\lib2 (master -&gt; origin)</span><br><span class="line">λ cd ..</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line">        modified:   lib2 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git commit -a -m &quot;update lib1 and lib2 commit id to lastest version&quot;</span><br><span class="line">[master b5208b3] update lib</span><br><span class="line"> 2 files changed, 2 insertions(+), 2 deletions(-)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ git push</span><br><span class="line">Enumerating objects: 3, done.</span><br><span class="line">Counting objects: 100% (3/3), done.</span><br><span class="line">Delta compression using up to 12 threads</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (2/2), 326 bytes | 326.00 KiB/s, done.</span><br><span class="line">Total 2 (delta 0), reused 0 (delta 0)</span><br><span class="line">To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\</span><br><span class="line">   3a6818e..b5208b3  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-9-使用脚本更新project1-b项目的submodules"><a href="#1-9-使用脚本更新project1-b项目的submodules" class="headerlink" title="1.9 使用脚本更新project1-b项目的submodules"></a>1.9 使用脚本更新project1-b项目的submodules</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1 (master -&gt; origin)</span><br><span class="line">λ cd C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b\</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git pull</span><br><span class="line">remote: Enumerating objects: 3, done.</span><br><span class="line">remote: Counting objects: 100% (3/3), done.</span><br><span class="line">remote: Compressing objects: 100% (2/2), done.</span><br><span class="line">remote: Total 2 (delta 0), reused 0 (delta 0)</span><br><span class="line">Unpacking objects: 100% (2/2), done.</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1</span><br><span class="line">   3a6818e..b5208b3  master     -&gt; origin/master</span><br><span class="line">Fetching submodule lib1</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/repo/lib1</span><br><span class="line">   f220249..139f263  master     -&gt; origin/master</span><br><span class="line">Fetching submodule lib2</span><br><span class="line">From C:/Users/TAL-YINGYU/Desktop/repo/lib2</span><br><span class="line">   1f05672..5d24031  master     -&gt; origin/master</span><br><span class="line">Updating 3a6818e..b5208b3</span><br><span class="line">Fast-forward</span><br><span class="line"> lib1 | 2 +-</span><br><span class="line"> lib2 | 2 +-</span><br><span class="line"> 2 files changed, 2 insertions(+), 2 deletions(-)</span><br><span class="line"></span><br><span class="line">C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)</span><br><span class="line">λ git status</span><br><span class="line">On branch master</span><br><span class="line">Your branch is up to date with &apos;origin/master&apos;.</span><br><span class="line"></span><br><span class="line">Changes not staged for commit:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)</span><br><span class="line">  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)</span><br><span class="line"></span><br><span class="line">        modified:   lib1 (new commits)</span><br><span class="line">        modified:   lib2 (new commits)</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br></pre></td></tr></table></figure>
+<p>可以看到，git判断出lib1和lib2有更新，这就是根据submodule的commit id引用  </p>
+<h4 id="1-9-1-思考"><a href="#1-9-1-思考" class="headerlink" title="1.9.1 思考"></a>1.9.1 思考</h4><p>那么现在我们怎么更新呢？难道还像刚才一样按照子模块一个一个的<code>git checkout master</code>，然后<code>git pull</code>？  </p>
+<p>这里只有两个子模块，如果多了呢？</p>
+<p>实际上有一个更简便的命令可以替代上述操作：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git submodule foreach git pull</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>循环<code>.gitsubmodules</code>文件里子模块的路径，依次进行子模块更新  </p>
+</blockquote>
+<p>同理我们可以模仿上述命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git submodule foreach ls -l</span><br><span class="line">``` </span><br><span class="line">可以列出每个子模块的文件列表</span><br></pre></td></tr></table></figure></p>
+<p>git submodule foreach git checkout master<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">每个子模块切换到master</span><br><span class="line"></span><br><span class="line">#### 1.9.2 实践</span><br><span class="line">先后执行下面两条语句即可  </span><br><span class="line">切换到master</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)<br>λ git submodule foreach git checkout master<br>Entering ‘lib1’<br>Switched to branch ‘master’<br>Your branch is behind ‘origin/master’ by 1 commit, and can be fast-forwarded.<br>  (use “git pull” to update your local branch)<br>Entering ‘lib2’<br>Switched to branch ‘master’<br>Your branch is behind ‘origin/master’ by 1 commit, and can be fast-forwarded.<br>  (use “git pull” to update your local branch)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">拉取</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-b (master -&gt; origin)<br>λ git submodule foreach git pull<br>Entering ‘lib1’<br>Updating f220249..139f263<br>Fast-forward<br> README | 1 +<br> 1 file changed, 1 insertion(+)<br> create mode 100644 README<br>Entering ‘lib2’<br>Updating 1f05672..5d24031<br>Fast-forward<br> lib2-infos.md | 1 +<br> 1 file changed, 1 insertion(+)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">### 1.10 新员工入职，克隆带有submodule的项目</span><br></pre></td></tr></table></figure></p>
+<p>git clone /path/to/repo/xxx.git<br>git submodule init<br>git submodule update<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">这时候新员工心里肯定嘀咕：这是什么操作？？这么麻烦！！  </span><br><span class="line">  </span><br><span class="line">我们可以一行代码搞定</span><br></pre></td></tr></table></figure></p>
+<p>git clone –recursive /path/to/repo/xxx.git<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">解释一下：  </span><br><span class="line">`--recursive`:可以在clone项目的同时clone关联的submodules</span><br><span class="line"></span><br><span class="line">#### 1.10.1 一键clone project2</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal<br>λ git clone –recursive ..\repo\project2.git\ prject2-auto-clone-submodules<br>Cloning into ‘prject2-auto-clone-submodules’…<br>done.<br>Submodule ‘lib1’ (C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/) registered for path ‘lib1’<br>Submodule ‘lib2’ (C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/) registered for path ‘lib2’<br>Cloning into ‘C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/prject2-auto-clone-submodules/lib1’…<br>done.<br>Cloning into ‘C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/prject2-auto-clone-submodules/lib2’…<br>done.<br>Submodule path ‘lib1’: checked out ‘139f263f4c444d140d3ca3efe7d949f4b2a5b77b’<br>Submodule path ‘lib2’: checked out ‘5d2403124046f72b364b0355717013c8221d1fbd’</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal<br>λ ls<br>lib1/  lib2/  prject2-auto-clone-submodules/  project1/  project1-b/  project2/</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal<br>λ ls prject2-auto-clone-submodules\<br>lib1/  lib2/  project2-infos.md<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">是不是爽歪歪~~~</span><br><span class="line"></span><br><span class="line">## 2. 移除submodule</span><br><span class="line">重新clone一个项目来练习移除submodule</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal<br>λ git clone –recursive ..\repo\project1.git\ project1-remove-submodules<br>Cloning into ‘project1-remove-submodules’…<br>done.<br>Submodule ‘lib1’ (C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/) registered for path ‘lib1’<br>Submodule ‘lib2’ (C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/) registered for path ‘lib2’<br>Cloning into ‘C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1-remove-submodules/lib1’…<br>done.<br>Cloning into ‘C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/project1-remove-submodules/lib2’…<br>done.<br>Submodule path ‘lib1’: checked out ‘139f263f4c444d140d3ca3efe7d949f4b2a5b77b’<br>Submodule path ‘lib2’: checked out ‘5d2403124046f72b364b0355717013c8221d1fbd’</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal<br>λ cd project1-remove-submodules\<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">### 2.1 删除git cache</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git rm -f –cached lib1<br>rm ‘lib1’</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git rm -f –cached lib2<br>rm ‘lib2’<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">### 2.2 物理删除本地文件夹和.gitmodules</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ rm -f lib1<br>rm: cannot remove ‘lib1’: Is a directory</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ rm -rf lib1</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ rm -rf lib2</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ ls<br>project1-infos.md</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ rm -rf .gitmodules</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">因为这里只有两个子模块，所以直接删除了`.gitmodules`,如果只需要删除某一个子模块，则在文件中删除对应的配置即可。</span><br><span class="line"></span><br><span class="line">### 2.3 删除`.git/config`的submodule配置</span><br><span class="line">源文件：</span><br></pre></td></tr></table></figure>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ cat .git\config<br>[core]<br>        repositoryformatversion = 0<br>        filemode = false<br>        bare = false<br>        logallrefupdates = true<br>        symlinks = false<br>        ignorecase = true<br>[submodule]<br>        active = .<br>[remote “origin”]<br>        url = C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\<br>        fetch = +refs/heads/<em>:refs/remotes/origin/</em><br>[branch “master”]<br>        remote = origin<br>        merge = refs/heads/master<br>[submodule “lib1”]<br>        url = C:/Users/TAL-YINGYU/Desktop/repo/lib1.git/<br>[submodule “lib2”]<br>        url = C:/Users/TAL-YINGYU/Desktop/repo/lib2.git/<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">删除后：</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ cat .git\config<br>[core]<br>        repositoryformatversion = 0<br>        filemode = false<br>        bare = false<br>        logallrefupdates = true<br>        symlinks = false<br>        ignorecase = true<br>[remote “origin”]<br>        url = C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\<br>        fetch = +refs/heads/<em>:refs/remotes/origin/</em><br>[branch “master”]<br>        remote = origin<br>        merge = refs/heads/master<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">### 2.4 提交更改</span><br></pre></td></tr></table></figure></p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git status<br>On branch master<br>Your branch is up to date with ‘origin/master’.</p>
+<p>Changes to be committed:<br>  (use “git reset HEAD <file>…” to unstage)</file></p>
+<pre><code>deleted:    lib1
+deleted:    lib2
+</code></pre><p>Changes not staged for commit:<br>  (use “git add/rm <file>…” to update what will be committed)<br>  (use “git checkout – <file>…” to discard changes in working directory)</file></file></p>
+<pre><code>deleted:    .gitmodules
+</code></pre><p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git add .gitmodules</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git status<br>On branch master<br>Your branch is up to date with ‘origin/master’.</p>
+<p>Changes to be committed:<br>  (use “git reset HEAD <file>…” to unstage)</file></p>
+<pre><code>deleted:    .gitmodules
+deleted:    lib1
+deleted:    lib2
+</code></pre><p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git commit -m “delete submodules”<br>[master b26add0] delete submodules<br> 3 files changed, 8 deletions(-)<br> delete mode 100644 .gitmodules<br> delete mode 160000 lib1<br> delete mode 160000 lib2</p>
+<p>C:\Users\TAL-YINGYU\Desktop\workSpaceLocal\project1-remove-submodules (master -&gt; origin)<br>λ git push<br>Enumerating objects: 3, done.<br>Counting objects: 100% (3/3), done.<br>Delta compression using up to 12 threads<br>Compressing objects: 100% (1/1), done.<br>Writing objects: 100% (2/2), 243 bytes | 243.00 KiB/s, done.<br>Total 2 (delta 0), reused 0 (delta 0)<br>To C:/Users/TAL-YINGYU/Desktop/workSpaceLocal/..\repo\project1.git\<br>   b5208b3..b26add0  master -&gt; master<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## 3. END</span><br><span class="line"></span><br><span class="line">零零碎碎总算写完了，写的有点啰嗦。  </span><br><span class="line">不过实际上，确实需要经过自己练习，才能熟练掌握git submodule的使用技巧。  </span><br><span class="line">如果你有更好的方法，希望能留下宝贵的意见。</span><br><span class="line"></span><br><span class="line">## 4. `git submodule foreach xxx`可真是个万金油</span><br><span class="line">拉取所有子模块</span><br></pre></td></tr></table></figure></p>
+<p>git submodule foreach git pull<br>git submodule foreach –recursive git submodule init<br>git submodule foreach –recursive git submodule update<br>```</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>Enjoy it ? Donate for it !  欣赏此文？求鼓励，求支持！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="http://image.hoacaini.com/blog/wechat.png" alt="阿西BUG WeChat Pay">
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="http://image.hoacaini.com/blog/alipay.png" alt="阿西BUG Alipay">
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tools/" rel="tag"># Tools</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/13/Leetcode-初级算法-存在重复元素/" rel="next" title="Leetcode-初级算法-存在重复元素">
+                <i class="fa fa-chevron-left"></i> Leetcode-初级算法-存在重复元素
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/18/extends和implement的区别/" rel="prev" title="extends和implement的区别">
+                extends和implement的区别 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="http://image.hoacaini.com/blog/HeadPic.png" alt="阿西BUG">
+          <p class="site-author-name" itemprop="name">阿西BUG</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/92Yu" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/sinat_28338727" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  CSDN
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://www.allknowboy.com" title="包打听" target="_blank">包打听</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.kuokuo666.com/" title="阔阔" target="_blank">阔阔</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://qilinzi.blog.csdn.net/" title="麒麟子_CSDN" target="_blank">麒麟子_CSDN</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-学习Git-SubModule"><span class="nav-number">2.</span> <span class="nav-text">1. 学习Git SubModule</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-创建Git-SubModule示例项目"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 创建Git SubModule示例项目</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-1-准备环境"><span class="nav-number">2.1.1.</span> <span class="nav-text">1.1.1 准备环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-2-初始化项目"><span class="nav-number">2.1.2.</span> <span class="nav-text">1.1.2 初始化项目</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-3-初始化公共类库"><span class="nav-number">2.1.3.</span> <span class="nav-text">1.1.3 初始化公共类库</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-为主项目添加SubModules"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 为主项目添加SubModules</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-为project1添加lib1和lib2"><span class="nav-number">2.2.1.</span> <span class="nav-text">1.2.1 为project1添加lib1和lib2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-模拟clone带有submodule的仓库"><span class="nav-number">2.3.</span> <span class="nav-text">1.3 模拟clone带有submodule的仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-修改submodule"><span class="nav-number">2.4.</span> <span class="nav-text">1.4 修改submodule</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-更新主项目的submodule"><span class="nav-number">2.5.</span> <span class="nav-text">1.5 更新主项目的submodule</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-6-为project2添加submodules-lib1和lib2"><span class="nav-number">2.6.</span> <span class="nav-text">1.6 为project2添加submodules lib1和lib2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-修改lib1和lib2并同步到project1和project2"><span class="nav-number">2.7.</span> <span class="nav-text">1.7 修改lib1和lib2并同步到project1和project2</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-1-在lib1中添加一个文件"><span class="nav-number">2.7.1.</span> <span class="nav-text">1.7.1 在lib1中添加一个文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-2-在lib2的lib2-infos添加内容"><span class="nav-number">2.7.2.</span> <span class="nav-text">1.7.2 在lib2的lib2-infos添加内容</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-8-在project1中同步peoject2的lib1和lib2的修改"><span class="nav-number">2.8.</span> <span class="nav-text">1.8 在project1中同步peoject2的lib1和lib2的修改</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-8-1-更新project1的lib1和lib2"><span class="nav-number">2.8.1.</span> <span class="nav-text">1.8.1 更新project1的lib1和lib2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-8-2-更新project1中的submodule引用"><span class="nav-number">2.8.2.</span> <span class="nav-text">1.8.2 更新project1中的submodule引用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-9-使用脚本更新project1-b项目的submodules"><span class="nav-number">2.9.</span> <span class="nav-text">1.9 使用脚本更新project1-b项目的submodules</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-9-1-思考"><span class="nav-number">2.9.1.</span> <span class="nav-text">1.9.1 思考</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿西BUG</span>
+</div>
+<div class="BbeiAn-info">
+鄂ICP备 - 
+<a href="http://www.miit.gov.cn" style="font-weight: bold"> 18007824号 </a>
+</div>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      人次
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (search_path.endsWith("json")) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      $('#local-search-input').focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- show little heart when click -->
+<script type="text/javascript" src="/js/src/love.js"></script>>

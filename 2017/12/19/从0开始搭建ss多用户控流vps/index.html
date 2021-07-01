@@ -1,0 +1,1227 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Other,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="阿西BUG的博客" type="application/atom+xml">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="真正从0开始搭建,我想这大概是对新手最完整的教程了....">
+<meta name="keywords" content="Other">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从0开始搭建ss多用户控流vps">
+<meta property="og:url" content="http://blog.92yu.win/2017/12/19/从0开始搭建ss多用户控流vps/index.html">
+<meta property="og:site_name" content="阿西BUG的博客">
+<meta property="og:description" content="真正从0开始搭建,我想这大概是对新手最完整的教程了....">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-11-23T16:16:30.287Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从0开始搭建ss多用户控流vps">
+<meta name="twitter:description" content="真正从0开始搭建,我想这大概是对新手最完整的教程了....">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.92yu.win/2017/12/19/从0开始搭建ss多用户控流vps/">
+
+
+
+
+
+  <title>从0开始搭建ss多用户控流vps | 阿西BUG的博客</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1272988818&web_id=1272988818" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+    <a href="https://github.com/92Yu"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">阿西BUG的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">九华不至一线天，井底妄取两星辰！天意难随恍虚梦，壮志未酬怎回头？！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            列表
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.92yu.win/2017/12/19/从0开始搭建ss多用户控流vps/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="阿西BUG">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="http://image.hoacaini.com/blog/HeadPic.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="阿西BUG的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                从0开始搭建ss多用户控流vps
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-19T09:05:45+08:00">
+                2017-12-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  真正从0开始搭建,我想这大概是对新手最完整的教程了....
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<p>我想这大概是对新手最完整的教程了….闲话不多说，开始正题</p>
+<h3 id="基础环境配置"><a href="#基础环境配置" class="headerlink" title="基础环境配置"></a>基础环境配置</h3><p>这里我们使用的服务器为CentOS v7版本,相关配置为Nginx v1.12 + MySQL v5.7 + PHP v7.0.5 .其他版本大同小异，各自注意区分即可。<br>这里的服务器是全新的服务器，上面什么配置都没有的。所以首先我们安装一些必备的工具。<br>依次执行如下命令，<br>安装wget下载工具：<br><code>yum install wget</code><br>安装gcc编译工具：<br><code>yum install gcc</code><br>安装git服务：<br><code>yum install git</code><br>安装python pip：<br><code>yum install python-pip</code></p>
+<h4 id="Nginx安装配置"><a href="#Nginx安装配置" class="headerlink" title="Nginx安装配置"></a>Nginx安装配置</h4><p>这里使用CentOS自带的yum命令安装：<br>首先，执行<code>rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm</code> ,可以通过变换上面的地址找到和自己服务器对应版本的 repo 的 rpm。<br>安装好 yum repo 之后，接下来用 yum 安装 nginx<br><code>yum install nginx</code><br>到此Nginx已经安装完成，可以执行 <code>nginx -v</code> 查看版本<br>设置开机启动：<br><code>systemctl enable nginx</code><br>立即启动Nginx<br><code>Systemctl start nginx</code><br>查看Nginx服务状态<br><code>Systemctl status nginx</code><br>到此，Nginx已经安装配置完成，可以在浏览器输入服务器ip访问，看到Nginx欢迎页面即为成功。</p>
+<h4 id="MySQL安装配置"><a href="#MySQL安装配置" class="headerlink" title="MySQL安装配置"></a>MySQL安装配置</h4><p>这里同样用 yum 安装 MySQL.<br><code>rpm -Uvh http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm</code><br>接着安装 MySQL<br><code>yum install mysql-community-server mysql-community-devel</code><br>安装完成的默认配置文件会在这个路径 <code>/etc/my.cnf</code> 可以根据实际需要修改里边的选项。<br>这里要注意的配置文件中如下位置，因为后面配置 PHP 的时候讲会用到：<br><code>socket=/var/lib/mysql/mysql.sock</code><br>看看下 MySQL 的状态<br><code>systemctl status mysqld</code><br>结果如下表示安装完成并且已经添加到了自启动：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mysqld.service - MySQL Server</span><br><span class="line">Loaded: loaded (/usr/lib/systemd/system/mysqld.service; enabled)</span><br><span class="line">Active: inactive (dead)</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>启动MySQL：<br><code>systemctl start mysqld</code><br>MySQL v5.7版本是会自动为 root@localhost用户创建一个默认密码的，可以通过如下命令找到：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep `temporary password` /var/log/mysqld.log</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>2016-04-07T15:39:59.942230Z 1 [Note] A temporary password is generated for root@localhost: UH!e%iTsIgs:</p>
+</blockquote>
+<p>上面的 <em>UH!e%iTsIgs</em> 就是默认密码，现在可以登入MySQL并修改密码：<br><code>mysql -uroot -p</code></p>
+<blockquote>
+<p>Enter password:<br>Welcome to the MySQL monitor.  Commands end with ; or \g.<br>Your MySQL connection id is 3<br>Server version: 5.7.11<br>…</p>
+</blockquote>
+<p>MySQL 5.7 版本对密码的安全性要求很严格，必须至少包含1个大写字母、1个小写字母、1个数字和1个特殊字符，长度不得小于8个字符。<br>修改密码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; ALTER USER `root`@`localhost` IDENTIFIED BY `Lnmp.cn8`;</span><br></pre></td></tr></table></figure></p>
+<p>其中<em>Lnmp.cn8</em> 就是新密码。<br>退出MySQL：<code>mysql&gt; quit</code></p>
+<h4 id="PHP-v7安装配置"><a href="#PHP-v7安装配置" class="headerlink" title="PHP v7安装配置"></a>PHP v7安装配置</h4><p>下载源码到 usr/local/src，<br><code>cd usr/local/src</code><br><code>wget -c http://cn2.php.net/distributions/php-7.0.5.tar.gz</code><br>解压<br><code>tar -zxvf php-7.0.5.tar.gz</code><br>进入解压后的文件夹：<br><code>cd php-7.0.5/</code><br>可以通过<code>./configure --help</code>看到，有三百多个扩展选项，可以自己根据需要增减，<br>这里我们预先那些准备装的扩展要用到的软件模块<br><code>yum -y install libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel zlib zlib-devel curl curl-devel openssl openssl-devel</code><br>接下来configure PHP<br><code>./configure --prefix=/usr/local/php7 --enable-fpm --with-fpm-user=nginx --with-fpm-group=nginx --with-pdo-mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --with-zlib --with-curl --with-gd --with-jpeg-dir --with-png-dir --with-freetype-dir --with-openssl --enable-mbstring --enable-xml --enable-session --enable-ftp --enable-pdo -enable-tokenizer --enable-zip</code></p>
+<p>值得一提的是，PHP7已经删除了MySQL扩展，所以 <code>-with-mysql</code> 不再是一个有效的选项。这里用 PDO 代替。<br>其中 –prefix 是安装目录，如果需要在同一个服务器安装多个 PHP 版本，这个 –prefix 设定是很有必要的。<br>configure成功会有  <em>Thank you for using PHP</em>  字样。<br>编译：<code>make</code><br>然后<code>make install</code><br>如果安装 PHP 时没有指明 –prefix ，那么就 php.ini 路径就是 <code>/usr/local/lib/php.ini</code> 。刚才安装时有指明 –prefix ，所以是 <code>/usr/local/php7/lib/php.ini</code><br>然后根据实际自己需要修改 php.ini。<br><code>vi /usr/local/php7/lib/php.ini</code><br>查找 <code>mysqli.default_socket</code>，修改成：<br><code>mysqli.default_socket = /var/lib/mysql/mysql.sock</code><br>其中 <code>/var/lib/mysql/mysql.sock</code> 就是上面安装 MySQL 时提到的。这个值必须填，否则会出现如下错误：<br><code>Warning: mysqli_connect(): (HY000/2002): No such file or directory</code><br>修改时区，查找 <code>date.timezone</code>，改成：<br><code>date.timezone = PRC</code><br>好了，PHP 7 已经安装好，下面验证一下: <code>/usr/local/php7/bin/php -v</code><br>显示PHP版本即为成功。<br>例行拷贝配置文件，以备不时只需<br><code>cp /usr/local/php7/etc/php-fpm.conf.default /usr/local/php7/etc/php-fpm.conf</code><br><code>cp /usr/local/php7/etc/php-fpm.d/www.conf.default /usr/local/php7/etc/php-fpm.d/www.conf</code><br>可以打开<code>/usr/local/php7/etc/php-fpm.d/www.conf</code>看到如下字段<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">user = nginx</span><br><span class="line">group = nginx</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listen = 127.0.0.1:9000</span><br></pre></td></tr></table></figure>
+<p>如果文件中上述字段配置不一样，改为上述内容。<br>其中<code>listen = 127.0.0.1:9000</code>要注意，9000这个端口在配置网站时要用到。<br>配置 php-fpm 启动服务脚本：<br>在解压后的php文件目录下执行：<code>cp sapi/fpm/php-fpm.service /usr/lib/systemd/system/</code><br>修改启动脚本，把里边 prefix 相关的内容用实际路径代替:<br><code>vi /usr/lib/systemd/system/php-fpm.service</code><br>将<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PIDFile=$&#123;prefix&#125;/var/run/php-fpm.pid</span><br><span class="line">ExecStart=$&#123;exec_prefix&#125;/sbin/php-fpm --nodaemonize --fpm-config $&#123;prefix&#125;/etc/php-fpm.conf</span><br></pre></td></tr></table></figure></p>
+<p>修改成<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PIDFile=/usr/local/php7/var/run/php-fpm.pid</span><br><span class="line">ExecStart=/usr/local/php7/sbin/php-fpm --nodaemonize --fpm-config /usr/local/php7/etc/php-fpm.conf</span><br></pre></td></tr></table></figure></p>
+<p>重新载入 systemd<br><code>systemctl daemon-reload</code><br>让 php-fpm 随机启动<br><code>systemctl enable php-fpm</code><br>立即启动 php-fpm<br><code>systemctl start php-fpm</code><br>查看状态：<code>systemctl status php-fpm</code>，看到服务running即可。</p>
+<h4 id="配置-Nginx-站点"><a href="#配置-Nginx-站点" class="headerlink" title="配置 Nginx 站点"></a>配置 Nginx 站点</h4><p>先建立一个 lnmp 站点，路径是 <code>/www/lnmp/web</code><br><code>mkdir -p /www/lnmp/web</code><br>并准备好 phpinfo 测试文件<br><code>vi /www/lnmp/web/phpinfo.php</code><br>输入如下内容保存：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">phpinfo();</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure></p>
+<p>每个站点建一个 Nginx 配置文件放到 <code>/etc/nginx/conf.d/</code> 中<br><code>cd /etc/nginx/conf.d/</code><br><code>vi lnmp.cn.conf</code><br>在 <code>lnmp.cn.conf</code> 中加入以下内容然后保存<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen       80;</span><br><span class="line">    server_name  www.lnmp.cn;</span><br><span class="line">    root         /www/lnmp/web;</span><br><span class="line">    location / &#123;</span><br><span class="line">        index  index.php index.html index.htm;</span><br><span class="line">    &#125;</span><br><span class="line">    location ~ \.php$ &#123;</span><br><span class="line">        fastcgi_pass   127.0.0.1:9000;</span><br><span class="line">        fastcgi_index  index.php;</span><br><span class="line">        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;</span><br><span class="line">        include        fastcgi_params;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中 <code>server_name  www.lnmp.cn</code>; 中的 www.lnmp.cn 改成你自己的域名<br>其中 <code>root         /www/lnmp/web</code>; 就是刚才创建的站点目录<br>其中 <code>fastcgi_pass   127.0.0.1:9000</code>; 就是上面配置 php-fpm 提到要留意的值<br>修改配置后一定要记得 reload nginx 才能生效<br><code>systemctl reload nginx</code><br>好了，大功告成，就打开刚才的域名验证下（如果没有已经指向配置好的服务器 IP的域名，使用ip也可以）<br>如果打不开，或者报错<code>dial tcp4 xxxxxx:80: getsockopt: no route to host</code><br>那么说明你的服务器80端口还没打开，你需要<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --zone=public --add-port=80/tcp --permanent</span><br><span class="line">systemctl stop firewalld.service</span><br><span class="line">systemctl start firewalld.service</span><br><span class="line">systemctl status firewalld.service</span><br></pre></td></tr></table></figure></p>
+<h3 id="安装并配置-ss-panel"><a href="#安装并配置-ss-panel" class="headerlink" title="安装并配置 ss-panel"></a>安装并配置 ss-panel</h3><h4 id="环境要求"><a href="#环境要求" class="headerlink" title="环境要求"></a>环境要求</h4><p>为前端的 ss-panel 是使用 PHP 编写的网页应用程序，它对你的主机运行环境有一定的要求。</p>
+<ul>
+<li>PHP 5.6 或更高</li>
+<li>MySQL 5.5 或更高</li>
+<li>支持 URL 重写的 Web 服务器（Nginx / Apache 均可）</li>
+</ul>
+<h4 id="下载-ss-panel-源码"><a href="#下载-ss-panel-源码" class="headerlink" title="下载 ss-panel 源码"></a>下载 ss-panel 源码</h4><p>ss-panel 的 GitHub 项目地址：<a href="https://github.com/orvice/ss-panel" target="_blank" rel="noopener">orvice/ss-panel</a><br>cd到你的web根目录下，clone ss-panel：<br><code>git clone https://github.com/orvice/ss-panel.git -b v3</code><br>其中 -b v3是代表clone v3版本的ss-panel<br>当然你也可以下载源码再用 SCP/FPS 传到服务器上去。<br>注意源码下载完成后的目录结构，请务必保证 /public 目录在站点的根目录下。你可以使用  <code>mv ss-panel/{.,}* ./</code> 命令将子目录的内容移动到当前目录来。</p>
+<h4 id="配置-ss-panel"><a href="#配置-ss-panel" class="headerlink" title="配置 ss-panel"></a>配置 ss-panel</h4><p>这个时候访问你的站点是会得到403 Forbidden, 因为此时站点根目录下是没有index.php文件的。当然这样也很正常，大部分 MVC 框架都将 index.php 的入口文件放到其他子目录下了，这样做是为了保护根目录下的配置文件等可能会导致信息泄露的敏感文件无法被访问。<br>接下来可以按照<a href="https://github.com/orvice/ss-panel/tree/v3" target="_blank" rel="noopener">官方文档</a>来配置的你web</p>
+<blockquote>
+<p>Step 1<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -sS https://getcomposer.org/installer | php</span><br><span class="line">$ php composer.phar  install</span><br></pre></td></tr></table></figure></p>
+<p>Step 2<br>将 .env.example 复制一份重命名为 .env，自行修改其中的数据库等信息。<br><code>cp .env.example .env</code><br>then edit .env<br><code>vi .env</code><br>你还需要修改 .env 中的 muKey 字段，修改为任意字符串（最好只包含 ASCII 字符），下面配置后端的时候我们需要使用到这个 muKey：<br><code>muKey = &#39;api_key_just_for_test&#39;</code><br>then<br><code>chmod -R 777 storage</code></p>
+<p>Step 3<br>Import the sql to you mysql database.<br><code>mysql -u root -p xxxxx &lt; db.sql</code>,其中xxxxx是你的数据库名字</p>
+<p>Step 4<br>Nginx Config example:<br>if you download ss-panel on path /home/www/ss-panel</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root /home/www/ss-panel/public;</span><br><span class="line">location / &#123;</span><br><span class="line">    try_files $uri $uri/ /index.php$is_args$args;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在访问你的站点，不出意外，就可以看到ss-panel首页了。</p>
+<h4 id="进入-ss-panel-后台"><a href="#进入-ss-panel-后台" class="headerlink" title="进入 ss-panel 后台"></a>进入 ss-panel 后台</h4><p>现在访问 <code>http://your-domain/admin</code> 就可以进入 ss-panel 后台了。<br>不过细心的你可能会注意到，刚才导入数据表的时候，user 表并没有添加记录，那要咋进管理后台呢？当然你可以在数据库中手动加一条记录，不过作者已经提供了一个更方便的方式：<br><code>php xcat createAdmin</code><br>在站点根目录下运行，根据提示即可创建管理员账号。探后根据提示输入账号密码就可以登入到自己的后台了。</p>
+<h3 id="部署并配置-shadowsocks-manyuser"><a href="#部署并配置-shadowsocks-manyuser" class="headerlink" title="部署并配置 shadowsocks-manyuser"></a>部署并配置 shadowsocks-manyuser</h3><h4 id="安装-shadowsocks-manyuser"><a href="#安装-shadowsocks-manyuser" class="headerlink" title="安装 shadowsocks-manyuser"></a>安装 shadowsocks-manyuser</h4><p>我们使用 <a href="https://github.com/fsgmhoward/shadowsocks-py-mu" target="_blank" rel="noopener">fsgmhoward/shadowsocks-py-mu</a> 这个版本的后端。这个后端支持使用 MultiUser API 与前端的 ss-panel 进行用户信息交互。</p>
+<p>这个 API 的官方介绍在<a href="https://sspanel.xyz/docs/muapi" target="_blank" rel="noopener">这里</a>。简单来讲，如果你通过 API 来与前端通信，你就不需要修改后端的数据库配置了，并且可以使用「自定义加密」、「流量记录」等高级功能。下面我只介绍使用 API 的方法。</p>
+<p>先将代码 clone 到本地：<br><code>git clone https://github.com/fsgmhoward/shadowsocks-py-mu.git</code><br>其中的 shadowsocks 子目录才是我们需要的，外面的是 setup.py 的相关文件。</p>
+<h4 id="配置-shadowsocks-manyuser"><a href="#配置-shadowsocks-manyuser" class="headerlink" title="配置 shadowsocks-manyuser"></a>配置 shadowsocks-manyuser</h4><p>进入 shadowsocks 目录，将 config_example.py 复制一份到 config.py：<br><code>cp config_example.py config.py</code><br>修改其中的部分字段如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">API_ENABLED = True</span><br><span class="line"></span><br><span class="line">API_URL = &apos;http://xxxxxxx/mu&apos;</span><br><span class="line"># 就是上面在 .env 中填写的 muKey 把它填在这里</span><br><span class="line">API_PASS = &apos;api_key_just_for_test&apos;</span><br></pre></td></tr></table></figure></p>
+<p>此时我们就可以试着运行脚本了 <code>python servers.py</code>，<strong>这里要注意是 servers.py，而不是server.py</strong><br>如果没错的话，你大概会看到如下输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Dec 03 13:41:18 INFO -----------------------------------------</span><br><span class="line">Dec 03 13:41:18 INFO Multi-User Shadowsocks Server Starting...</span><br><span class="line">Dec 03 13:41:18 INFO Current Server Version: 3.4.0-dev</span><br><span class="line">Dec 03 13:41:18 INFO Now using MultiUser API as the user interface</span><br><span class="line">Dec 03 13:41:18 INFO Now starting manager thread...</span><br><span class="line">Dec 03 13:41:23 INFO Now starting user pulling thread...</span><br><span class="line">Dec 03 13:41:23 INFO Server Added:   P[1025], M[aes-256-cfb], E[xxxxxxxx.com]</span><br></pre></td></tr></table></figure></p>
+<p>其中 P[XXX] 表示用户端口，M[XXX] 表示加密方式，E[XXX] 表示用户的邮箱地址。这些都会随着 ss-panel 前端中用户配置的改变而实时变化。</p>
+<p>此时你虽然已经把 servers.py 跑起来了，但是你应该还不能翻墙，因为还没有打开端口，所以此时你需要打开刚才输出中的端口，ss-panel 新注册的用户所分配的端口均为其 id-1 的用户的端口号 + 1。比如说你把 admin 用户（uid 为1）的端口改为 12450，那么后面注册的新用户的端口就会是 12451, 12452 这样递增的。<br>所以此时你可以批量打开部分端口：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --permanent --zone=public --add-port=xxxx-xxxx/tcp</span><br><span class="line">systemctl stop firewalld.service</span><br><span class="line">systemctl start firewalld.service</span><br><span class="line">systemctl status firewalld.service</span><br></pre></td></tr></table></figure></p>
+<p>到此，应该可以正常科学上网了。</p>
+<h4 id="配置-ss-manyuser-守护进程"><a href="#配置-ss-manyuser-守护进程" class="headerlink" title="配置 ss-manyuser 守护进程"></a>配置 ss-manyuser 守护进程</h4><p>这里守护进程是希望servers.py在后台隐式运行，你可以：<br><code>pip install supervisor</code><br>创建 supervisor 配置文件:<br><code>echo_supervisord_conf &gt; /etc/supervisord.conf</code><br>配置 supervisor 以监控 ss-manyuser 运行<br><code>/etc/supervisord.conf</code><br>在文件尾部添加如下内容并修改为自己的实际路径：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[program:ss-manyuser]</span><br><span class="line">command = python /usr/local/src/shadowsocks-py-mu/shadowsocks/servers.py</span><br><span class="line">user = root</span><br><span class="line">autostart = true</span><br><span class="line">autorestart = true</span><br></pre></td></tr></table></figure></p>
+<p>重启 supervisor 服务以加载配置<br><code>supervisorctl reload</code><br>查看 shadowsocks-manyuser 是否已经运行：<br><code>ps -ef | grep servers.py</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root     10288  2781  0 13:41 ?        00:00:00 python /usr/local/src/shadowsocks-py-mu/shadowsocks/servers.py</span><br></pre></td></tr></table></figure></p>
+<p>也可以通过以下命令管理 shadowsock-manyuser 的状态<br><code>supervisorctl {start|stop|restart} ss-manyuser</code></p>
+<p>至此，已经完成了多用户控流科学上网的配置了，叫上你的小伙伴一起享受冲浪的乐趣吧！</p>
+<h3 id="常见错误-FAQ"><a href="#常见错误-FAQ" class="headerlink" title="常见错误 FAQ"></a>常见错误 FAQ</h3><p>1 . 查看Nginx服务状态显示 Failed to read PID from file /run/nginx.pid: Invalid argument<br>因为 nginx 启动需要一点点时间，而 systemd 在 nginx 完成启动前就去读取 pid file<br>造成读取 pid 失败<br>解决方法很简单，让 systemd 在执行 ExecStart 的指令后等待一点点时间即可<br>如果你的 nginx 启动需要时间更长，可以把 sleep 时间改长一点<br><code>mkdir -p /etc/systemd/system/nginx.service.d</code><br><code>printf &quot;[Service]\nExecStartPost=/bin/sleep 0.1\n&quot; &gt; /etc/systemd/system/nginx.service.d/override.conf</code><br>然后<br><code>systemctl daemon-reload</code><br><code>systemctl restart nginx.service</code></p>
+<p>2 .  php: command not found<br>原因是你的php并没有配置全局路径，加上绝对路径即可，例如<code>/usr/local/php7/bin/php</code></p>
+<p>3 .  配置ss-panel前端的时候站点提示：502 Bad Gateway<br>因为 nginx 找不到php-fpm了，所以报错，一般是fastcgi_pass后面的路径配置错误了，后面可以是socket或者是ip:port<br>例如：修改php-fpm的配置文件  <code>vi /usr/local/php7/etc/php-fpm.conf</code>   里面的 <code>listen = /tmp/php-fcgi.sock</code>  改为  <code>listen = 127.0.0.1:9000</code></p>
+<p>4 .  站点页面空白，没有任何提示<br>检查你的nginx配置，我的如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen       80;</span><br><span class="line">    server_name  xx.xx.xxx.xxx;   #这里隐藏了我的IP</span><br><span class="line">    index  index.php index.html index.htm;</span><br><span class="line"></span><br><span class="line">    root         /www/ssmu/public;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">    	try_files $uri $uri/ /index.php$is_args$args;</span><br><span class="line">    &#125;</span><br><span class="line">    location ~ [^/]\.php(/|$) &#123;</span><br><span class="line">        fastcgi_pass   127.0.0.1:9000;</span><br><span class="line">        fastcgi_index  index.php;</span><br><span class="line">        fastcgi_param  SCRIPT_FILENAME   $document_root$fastcgi_script_name;</span><br><span class="line">        include        fastcgi_params;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>5 . 创建管理员账号时：Uncaught PDOException: could not find driver in …<br>原因是缺少php pdo_mysql扩展  安装即可</p>
+<p>6 .  Slim Application Error<br>一般是缺少权限，相应的文件夹赋予权限即可</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>Enjoy it ? Donate for it !  欣赏此文？求鼓励，求支持！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="http://image.hoacaini.com/blog/wechat.png" alt="阿西BUG WeChat Pay">
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="http://image.hoacaini.com/blog/alipay.png" alt="阿西BUG Alipay">
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Other/" rel="tag"># Other</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/23/译-关于手游网络协议的简单分析/" rel="next" title="[译]关于手游网络协议的简单分析">
+                <i class="fa fa-chevron-left"></i> [译]关于手游网络协议的简单分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/16/关于C-中memset方法的使用笔记/" rel="prev" title="关于C++中memset方法的使用笔记">
+                关于C++中memset方法的使用笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="http://image.hoacaini.com/blog/HeadPic.png" alt="阿西BUG">
+          <p class="site-author-name" itemprop="name">阿西BUG</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/92Yu" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/sinat_28338727" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  CSDN
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://www.allknowboy.com" title="包打听" target="_blank">包打听</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.kuokuo666.com/" title="阔阔" target="_blank">阔阔</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://qilinzi.blog.csdn.net/" title="麒麟子_CSDN" target="_blank">麒麟子_CSDN</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#基础环境配置"><span class="nav-number">1.</span> <span class="nav-text">基础环境配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Nginx安装配置"><span class="nav-number">1.1.</span> <span class="nav-text">Nginx安装配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MySQL安装配置"><span class="nav-number">1.2.</span> <span class="nav-text">MySQL安装配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PHP-v7安装配置"><span class="nav-number">1.3.</span> <span class="nav-text">PHP v7安装配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-Nginx-站点"><span class="nav-number">1.4.</span> <span class="nav-text">配置 Nginx 站点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装并配置-ss-panel"><span class="nav-number">2.</span> <span class="nav-text">安装并配置 ss-panel</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#环境要求"><span class="nav-number">2.1.</span> <span class="nav-text">环境要求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#下载-ss-panel-源码"><span class="nav-number">2.2.</span> <span class="nav-text">下载 ss-panel 源码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-ss-panel"><span class="nav-number">2.3.</span> <span class="nav-text">配置 ss-panel</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进入-ss-panel-后台"><span class="nav-number">2.4.</span> <span class="nav-text">进入 ss-panel 后台</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署并配置-shadowsocks-manyuser"><span class="nav-number">3.</span> <span class="nav-text">部署并配置 shadowsocks-manyuser</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#安装-shadowsocks-manyuser"><span class="nav-number">3.1.</span> <span class="nav-text">安装 shadowsocks-manyuser</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-shadowsocks-manyuser"><span class="nav-number">3.2.</span> <span class="nav-text">配置 shadowsocks-manyuser</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-ss-manyuser-守护进程"><span class="nav-number">3.3.</span> <span class="nav-text">配置 ss-manyuser 守护进程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常见错误-FAQ"><span class="nav-number">4.</span> <span class="nav-text">常见错误 FAQ</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿西BUG</span>
+</div>
+<div class="BbeiAn-info">
+鄂ICP备 - 
+<a href="http://www.miit.gov.cn" style="font-weight: bold"> 18007824号 </a>
+</div>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      人次
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (search_path.endsWith("json")) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      $('#local-search-input').focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- show little heart when click -->
+<script type="text/javascript" src="/js/src/love.js"></script>>

@@ -1,0 +1,1260 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="CocosCreator,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="阿西BUG的博客" type="application/atom+xml">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="介绍什么是 DrawCall，为什么要减少 DrawCall 以及在 Cocos Creator 项目中如何减少 DrawCall 来提升游戏性能。">
+<meta name="keywords" content="CocosCreator">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CocosCreator优化DrawCall漫谈">
+<meta property="og:url" content="http://blog.92yu.win/2020/08/07/CocosCreator优化之DrawCall漫谈/index.html">
+<meta property="og:site_name" content="阿西BUG的博客">
+<meta property="og:description" content="介绍什么是 DrawCall，为什么要减少 DrawCall 以及在 Cocos Creator 项目中如何减少 DrawCall 来提升游戏性能。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-07-01T15:07:53.188Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CocosCreator优化DrawCall漫谈">
+<meta name="twitter:description" content="介绍什么是 DrawCall，为什么要减少 DrawCall 以及在 Cocos Creator 项目中如何减少 DrawCall 来提升游戏性能。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.92yu.win/2020/08/07/CocosCreator优化之DrawCall漫谈/">
+
+
+
+
+
+  <title>CocosCreator优化DrawCall漫谈 | 阿西BUG的博客</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1272988818&web_id=1272988818" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+    <a href="https://github.com/92Yu"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">阿西BUG的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">九华不至一线天，井底妄取两星辰！天意难随恍虚梦，壮志未酬怎回头？！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            列表
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.92yu.win/2020/08/07/CocosCreator优化之DrawCall漫谈/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="阿西BUG">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="http://image.hoacaini.com/blog/HeadPic.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="阿西BUG的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                CocosCreator优化DrawCall漫谈
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-08-07T21:32:28+08:00">
+                2020-08-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  介绍什么是 DrawCall，为什么要减少 DrawCall 以及在 Cocos Creator 项目中如何减少 DrawCall 来提升游戏性能。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<blockquote>
+<p><strong>本文首发于我的个人Blog<a href="http://blog.92yu.win">阿西BUG</a>，欢迎大家批评指正</strong></p>
+</blockquote>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在游戏开发中，DrawCall 作为一个非常重要的性能指标，直接影响游戏的整体性能表现。<br>无论是 Cocos Creator、Unity、Unreal 还是其他游戏引擎，只要说到游戏性能优化，DrawCall 都是绝对少不了的一项。<br>本文将会介绍什么是 DrawCall，为什么要减少 DrawCall 以及在 Cocos Creator 项目中如何减少 DrawCall 来提升游戏性能。  </p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="什么是-DrawCall"><a href="#什么是-DrawCall" class="headerlink" title="什么是 DrawCall"></a>什么是 DrawCall</h2><blockquote>
+<p>DrawCall就是CPU调用图形库（比如DirectX或OpenGL）的图形绘制接口，来命令GPU进行渲染的操作。</p>
+</blockquote>
+<h2 id="DrawCall-是如何影响性能的呢？"><a href="#DrawCall-是如何影响性能的呢？" class="headerlink" title="DrawCall 是如何影响性能的呢？"></a>DrawCall 是如何影响性能的呢？</h2><blockquote>
+<p>先举个栗子：<br>http形式从服务器拉取1024个大小1kb的文件和单个大小为1M的文件，哪个耗时更短？<br>答：肯定是拉取单个1M的更快。<br><strong>原因就是每个请求之前，http 都需要做许多的准备工作来保证文件能够正常传输。而正是这些额外工作，造成了很多时间和性能开销。</strong>  </p>
+</blockquote>
+<p>而每一次绘制CPU都要调用DrawCall，而在调动DrawCall前，CPU还要进行很多准备工作：检测渲染状态、提交渲染所需要的数据、提交渲染所需要的状态。<br>而GPU本身具有很强大的计算能力，可以很快就处理完渲染任务。一般来说，绘制 100 个三角形和绘制 1000 个三角形所消耗的时间没差多少。<br>但是，当 DrawCall 过多，CPU就会很多额外开销用于准备工作，CPU本身负载，而这时GPU可能闲置了。   </p>
+<blockquote>
+<p><strong> 也就是说，正是因为每次渲染前，CPU 都需要做一系列准备工作，而 CPU 的每一次内存显存读写、数据处理和渲染状态切换都会带来一定的性能和时间消耗，积少成多，而 GPU 大部分时间都在摸鱼。<br>所以才造成了我们认知中的，DrawCall 数量过多导致了卡顿 </strong></p>
+</blockquote>
+<h2 id="如何减少-DrawCall"><a href="#如何减少-DrawCall" class="headerlink" title="如何减少 DrawCall"></a>如何减少 DrawCall</h2><p>如上所说，我们可以通过一次多给 CPU 分配点工作，让一次渲染的内容多一些，减少分配次数，来达到我们的目的。<br>话是这么说，可是我们应该怎么实际操作呢？往下看  </p>
+<h3 id="针对图片资源"><a href="#针对图片资源" class="headerlink" title="针对图片资源"></a>针对图片资源</h3><h4 id="静态合图"><a href="#静态合图" class="headerlink" title="静态合图"></a>静态合图</h4><p>就是讲碎图整合成一张大图，即我们常说的 打图集。<br>但是图集也不是随便打的，并不是一张大图容纳越多的碎图越好。这里面也是有一定的门道的。  </p>
+<blockquote>
+<p><strong>尽量将处于同一界面（UI）下的相邻且渲染状态相同的碎图打包成图集</strong> </p>
+<p>对于Creator来说，在游戏运行时引擎是按照节点层级顺序从上往下由浅到深进行渲染的，理论上 每渲染一张图像（文本最终也是图像）都需要一次 DrawCall。<br>渲染状态是指：纹理状态（预乘、循环模式和过滤模式）或 Material（材质）、Blend（混合模式）等等，所以使用自定义 Shader 也会打断合批</p>
+</blockquote>
+<p>所以 <strong>相邻且渲染状态相同</strong> 是关键点。<br>tip: 不建议任何图片资源的尺寸超过2048*2048，否则可能会出现加载相关的问题。  </p>
+<p>下面介绍2种打图集的方式</p>
+<h5 id="自动图集资源（Auto-Atlas）"><a href="#自动图集资源（Auto-Atlas）" class="headerlink" title="自动图集资源（Auto Atlas）"></a>自动图集资源（Auto Atlas）</h5><p>利用 Cocos Creator 内置的自动图集资源来将碎图打包成图集。<br>在项目构建时，编辑器会将所有自动图集资源所在文件夹下的所有符合要求的图像分别根据配置打包成一个或多个图集。<br>自动图集资源使用起来很灵活，编辑器在打包图集时会自动递归子目录，若子目录下也有自动图集资源（即 .pac 文件）则会跳过该目录，所以我们可以对同一目录下的不同部分的碎图配置不同的参数。  </p>
+<blockquote>
+<p>关于自动图集的几点建议</p>
+<ul>
+<li>合理控制图集最大尺寸，避免单个图像加载时间过长。</li>
+<li>尺寸太大的图像没有必要打进图集（如背景图）。</li>
+<li>善用九宫格（Sliced）可以节省很多空间（这一点需要美术大佬配合）。</li>
+<li>间距保持默认的 2 并保持勾选扩边选项，避免图像裁剪错误和出现黑边的情况。</li>
+<li>勾选不包含未被引用资源选项，自动排除没有用到的图像以节省空间（该选项预览时无效）。</li>
+<li>开发时预览图集，根据结果进行调整，以达到最好的优化效果。</li>
+</ul>
+</blockquote>
+<h5 id="TexturePacker"><a href="#TexturePacker" class="headerlink" title="TexturePacker"></a>TexturePacker</h5><blockquote>
+<p>使用 TexturePacker 打包图集时需要注意配置「形状填充（Shape Padding，对应 Auto Atlas 中的间距）」，避免某张图像出现相邻图像的像素的情况。</p>
+</blockquote>
+<h5 id="对比一下"><a href="#对比一下" class="headerlink" title="对比一下"></a>对比一下</h5><p>Auto Atlas</p>
+<ul>
+<li>Cocos Creator 内置，方便</li>
+<li>功能不多但是该有的都有</li>
+<li>项目构建时才生成图集，开发时任意修改无压力</li>
+<li>图集尺寸在生成时自适应，节省空间</li>
+<li>支持自动纹理压缩  </li>
+</ul>
+<p>TexturePacker  </p>
+<ul>
+<li>第三方软件需自行安装，不够方便</li>
+<li>收费功能很多很专业但是基本用不着，免费功能也够用</li>
+<li>先生成图集再使用，更换图像又要重新生成图集</li>
+<li>尺寸固定需要自己设置</li>
+<li>不支持自动纹理压缩 </li>
+</ul>
+<h4 id="动态合图"><a href="#动态合图" class="headerlink" title="动态合图"></a>动态合图</h4><p>Creator 官方说明：</p>
+<blockquote>
+<p>Cocos Creator 提供了在项目构建时的静态合图方法 —— 「自动合图」（Auto Atlas）。但是当项目日益壮大的时候贴图会变得非常多，很难将贴图打包到一张大贴图中，这时静态合图就比较难以满足降低 DrawCall 的需求。<br>所以 Cocos Creator 在 v2.0 中加入了 「动态合图」（Dynamic Atlas）的功能，它能在项目运行时动态的将贴图合并到一张大贴图中。当渲染一张贴图的时候，动态合图系统会自动检测这张贴图是否已经被合并到了图集（图片集合）中，如果没有，并且此贴图又符合动态合图的条件，就会将此贴图合并到图集中。<br>动态合图官方文档：<br><a href="https://docs.cocos.com/creator/manual/zh/advanced-topics/dynamic-atlas.html" target="_blank" rel="noopener">https://docs.cocos.com/creator/manual/zh/advanced-topics/dynamic-atlas.html</a>  </p>
+</blockquote>
+<p>动态图集有2个限制：  </p>
+<ul>
+<li>动态图集尺寸最大是 2048 * 2048  </li>
+<li>碎图的尺寸默认不能超过 512，可通过 API 进行修改：<code>cc.dynamicAtlasManager.maxFrameSize = 512</code>  </li>
+</ul>
+<p>tips: 启用动态合图会增大内存消耗，不同平台占用内存不一致。小游戏和原生平台默认禁止动态合图。可以通过 api 自行开启：<code>cc.macro.CLEANUP_IMAGE_CACHE = false; cc.dynamicAtlasManager.enabled = true;</code><br><strong><em>还需要保证纹理的 Premulyiply Alpha（预乘）、Wrap Mode（循环模式） 和 Filter Mode（过滤模式） 等信息与动态图集一致才能够动态合批。</em></strong>  </p>
+<p>另外，<strong><em>静态图集也能参与动态合图</em></strong>，只要满足动态合图的要求即可。<br>tip1: 自动图集资源（Auto Atlas）需要在其属性检查器面板中开启 Texture 栏下的 Packable 选项，<strong>该选项默认是禁用的</strong>。<br>tip2: 精灵（Sprite）也是需要开启 Packable 选项才能动态合图。<strong>该选项默认是开启的</strong>。<br>tip3: 如果要使用了 shader ，那么需要禁用该精灵的 Packable 选项。</p>
+<h3 id="针对-Label"><a href="#针对-Label" class="headerlink" title="针对 Label"></a>针对 Label</h3><h4 id="位图字体（BMFont）"><a href="#位图字体（BMFont）" class="headerlink" title="位图字体（BMFont）"></a>位图字体（BMFont）</h4><p>在 Creator 中使用系统字体或 TTF 字体的 Label 会打断渲染合批，特别是 Label 和 Sprite 层叠交错的情况，每一个 Label 都会打断合批增加一个 DrawCall。  </p>
+<blockquote>
+<p>因此建议使用 BMFont 来代替 TTF 或系统字体，并且将 BMFont 与 UI 碎图打包到同一图集中（或「开启动态合图」），可以免除大部分文本导致的 DrawCall增加。  </p>
+</blockquote>
+<h4 id="文本缓存模式（Cache-Mode）"><a href="#文本缓存模式（Cache-Mode）" class="headerlink" title="文本缓存模式（Cache Mode）"></a>文本缓存模式（Cache Mode）</h4><p>Creator 2.0.9 版本在 Label 组件上增加了 Cache Mode 选项，来解决系统字体和 TTF 字体带来的性能问题。<br>CacheMode有三种选项：  </p>
+<ol>
+<li>NONE（默认）<br>每一个 Label 都会生成为一张单独的位图，且不会参与动态合图，所以每一个 Label 都会打断渲染合批</li>
+<li>BITMAP<br>开启 BITMAP 模式后，文本同样会生成为一张位图，但是只要符合动态合图要求就可以参与动态合图，和周围的精灵合并 DrawCall 。<br> <strong>一定要注意 BITMAP 模式只适用于不频繁更改的文本，否则内存会爆炸。</strong>  </li>
+<li><p>CHAR<br>开启 CHAR 模式后，引擎会将该 Label 中出现的所有字符缓存到一张全局共享的位图中，相当于是生成了一个 BMFont 。<br><strong>适用于文本频繁更改的情况，对性能和内存最友好。</strong><br>tip： 该模式 <strong>只能用于字体样式和字号固定，并且不会频繁出现巨量未使用过的字符</strong> 的 Label。因为共享位图的最大尺寸为 2048*2048，占满了之后就没办法再渲染新的字符，需要切换场景才会清除共享位图。  </p>
+<p> 总结：对于大量频繁更改的文本，使用 CHAR 模式带来的性能提升是非常明显的。<br> 同时 CHAR 模式的局限也很明显，一般用于场景中出现大量数字文本，类似于经验值增加、血量减少之类的特效的情况</p>
+</li>
+</ol>
+<h3 id="必经之路–调整UI层级顺序"><a href="#必经之路–调整UI层级顺序" class="headerlink" title="必经之路–调整UI层级顺序"></a>必经之路–调整UI层级顺序</h3><blockquote>
+<p>原则：  </p>
+<ul>
+<li>分离图像节点和文本节点  </li>
+<li>文本使用 BMFont 或 Cache Mode 选项，尽量出现避免文本打断渲染合批的情况  </li>
+<li><font color="red">FBI WARNING:</font> 一个 Mask 组件及其控制的渲染节点，需要至少三次 Draw call。第一次开启模板测试并调用一次 Draw call，刷新模板缓冲。第二次绘制对需要通过模板测试的区域进行设置。第三次再进行实际的子节点内容绘制，绘制结束再关闭模板测试。因此 <strong>使用 Mask 组件就无法与其他相邻节点进行批次处理</strong> ，但是 Mask 组件内部的连续节点在满足合并规则的情况下还是会进行合批。</li>
+</ul>
+</blockquote>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>改变渲染状态会打断渲染合批，例如改变纹理状态（预乘、循环模式和过滤模式）或改变 Material（材质）、Blend（混合模式）等等，所以使用自定义 Shader 也会打断合批。</li>
+<li>图集默认不参与动态合图，手动开启自动图集资源的 Packable 选项后如果最终图集符合动态合图要求也可以参与动态合图。</li>
+<li>纹理开启 Packable 选项参与动态合图后无法使用自定义 Shader，因为动态合图会修改原始贴图的 UV 坐标。</li>
+<li>使用 Cache Mode 的 BITMAP 模式需要注意内存情况，CHAR 模式需要注意文本内容不宜过多。</li>
+<li>在 <strong><em>Cocos Creator 2.0.7 之前的版本</em></strong>中，改变节点的颜色或透明度、Sprite 组件使用九宫格（Sliced）都会打断渲染合批</li>
+</ul>
+<p>以上内容整理自 CocosCreator 官方文档，<a href="https://docs.cocos.com/creator/manual/zh/" target="_blank" rel="noopener">点击这里查看</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>Enjoy it ? Donate for it !  欣赏此文？求鼓励，求支持！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="http://image.hoacaini.com/blog/wechat.png" alt="阿西BUG WeChat Pay">
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="http://image.hoacaini.com/blog/alipay.png" alt="阿西BUG Alipay">
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CocosCreator/" rel="tag"># CocosCreator</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/12/18/extends和implement的区别/" rel="next" title="extends和implement的区别">
+                <i class="fa fa-chevron-left"></i> extends和implement的区别
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/11/24/Markdown 语法/" rel="prev" title="Markdown 语法（精简版）">
+                Markdown 语法（精简版） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="http://image.hoacaini.com/blog/HeadPic.png" alt="阿西BUG">
+          <p class="site-author-name" itemprop="name">阿西BUG</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/92Yu" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/sinat_28338727" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  CSDN
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://www.allknowboy.com" title="包打听" target="_blank">包打听</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.kuokuo666.com/" title="阔阔" target="_blank">阔阔</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://qilinzi.blog.csdn.net/" title="麒麟子_CSDN" target="_blank">麒麟子_CSDN</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是-DrawCall"><span class="nav-number">2.1.</span> <span class="nav-text">什么是 DrawCall</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DrawCall-是如何影响性能的呢？"><span class="nav-number">2.2.</span> <span class="nav-text">DrawCall 是如何影响性能的呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何减少-DrawCall"><span class="nav-number">2.3.</span> <span class="nav-text">如何减少 DrawCall</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#针对图片资源"><span class="nav-number">2.3.1.</span> <span class="nav-text">针对图片资源</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#静态合图"><span class="nav-number">2.3.1.1.</span> <span class="nav-text">静态合图</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#自动图集资源（Auto-Atlas）"><span class="nav-number">2.3.1.1.1.</span> <span class="nav-text">自动图集资源（Auto Atlas）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#TexturePacker"><span class="nav-number">2.3.1.1.2.</span> <span class="nav-text">TexturePacker</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对比一下"><span class="nav-number">2.3.1.1.3.</span> <span class="nav-text">对比一下</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#动态合图"><span class="nav-number">2.3.1.2.</span> <span class="nav-text">动态合图</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#针对-Label"><span class="nav-number">2.3.2.</span> <span class="nav-text">针对 Label</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#位图字体（BMFont）"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">位图字体（BMFont）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文本缓存模式（Cache-Mode）"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">文本缓存模式（Cache Mode）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#必经之路–调整UI层级顺序"><span class="nav-number">2.3.3.</span> <span class="nav-text">必经之路–调整UI层级顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">2.3.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿西BUG</span>
+</div>
+<div class="BbeiAn-info">
+鄂ICP备 - 
+<a href="http://www.miit.gov.cn" style="font-weight: bold"> 18007824号 </a>
+</div>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      人次
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (search_path.endsWith("json")) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      $('#local-search-input').focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- show little heart when click -->
+<script type="text/javascript" src="/js/src/love.js"></script>>

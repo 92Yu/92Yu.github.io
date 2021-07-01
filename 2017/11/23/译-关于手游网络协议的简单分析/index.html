@@ -1,0 +1,1251 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="C++,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="阿西BUG的博客" type="application/atom+xml">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="大多数加密方案都假定可信的发送者和接收者会通过一个不可信的通道通信.虽然假设发送者会故意尝试愚弄接收者有点荒谬,但这确实是摆在开发者面前的问题。有些玩家是不可信的, 更糟的是, 他们能够通过客户端执行文件获取对加密算法和所有通信的了解。在这样的情况下，我们不可能提供完全安全的通信，但是我们可以为攻击者制造麻烦。本文着重介绍一些实用的技术来为网络游戏建立一个应用程序级通讯协议。">
+<meta name="keywords" content="C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[译]关于手游网络协议的简单分析">
+<meta property="og:url" content="http://blog.92yu.win/2017/11/23/译-关于手游网络协议的简单分析/index.html">
+<meta property="og:site_name" content="阿西BUG的博客">
+<meta property="og:description" content="大多数加密方案都假定可信的发送者和接收者会通过一个不可信的通道通信.虽然假设发送者会故意尝试愚弄接收者有点荒谬,但这确实是摆在开发者面前的问题。有些玩家是不可信的, 更糟的是, 他们能够通过客户端执行文件获取对加密算法和所有通信的了解。在这样的情况下，我们不可能提供完全安全的通信，但是我们可以为攻击者制造麻烦。本文着重介绍一些实用的技术来为网络游戏建立一个应用程序级通讯协议。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-11-23T16:16:30.288Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[译]关于手游网络协议的简单分析">
+<meta name="twitter:description" content="大多数加密方案都假定可信的发送者和接收者会通过一个不可信的通道通信.虽然假设发送者会故意尝试愚弄接收者有点荒谬,但这确实是摆在开发者面前的问题。有些玩家是不可信的, 更糟的是, 他们能够通过客户端执行文件获取对加密算法和所有通信的了解。在这样的情况下，我们不可能提供完全安全的通信，但是我们可以为攻击者制造麻烦。本文着重介绍一些实用的技术来为网络游戏建立一个应用程序级通讯协议。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.92yu.win/2017/11/23/译-关于手游网络协议的简单分析/">
+
+
+
+
+
+  <title>[译]关于手游网络协议的简单分析 | 阿西BUG的博客</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1272988818&web_id=1272988818" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+    <a href="https://github.com/92Yu"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">阿西BUG的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">九华不至一线天，井底妄取两星辰！天意难随恍虚梦，壮志未酬怎回头？！</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            列表
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.92yu.win/2017/11/23/译-关于手游网络协议的简单分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="阿西BUG">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="http://image.hoacaini.com/blog/HeadPic.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="阿西BUG的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                [译]关于手游网络协议的简单分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-23T21:21:54+08:00">
+                2017-11-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+              <div class="post-description">
+                  大多数加密方案都假定可信的发送者和接收者会通过一个不可信的通道通信.虽然假设发送者会故意尝试愚弄接收者有点荒谬,但这确实是摆在开发者面前的问题。有些玩家是不可信的, 更糟的是, 他们能够通过客户端执行文件获取对加密算法和所有通信的了解。在这样的情况下，我们不可能提供完全安全的通信，但是我们可以为攻击者制造麻烦。本文着重介绍一些实用的技术来为网络游戏建立一个应用程序级通讯协议。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<hr>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>大多数加密方案都假定可信的发送者和接收者会通过一个不可信的通道通信. 虽然假设发送者会故意尝试愚弄接收者有点荒谬,但这确实是摆在开发者面前的问题。有些玩家是不可信的, 更糟的是, 他们能够通过客户端执行文件获取对加密算法和所有通信的了解。在这样的情况下，我们不可能提供完全安全的通信，但是我们可以为攻击者制造麻烦。本文着重介绍一些实用的技术来为网络游戏建立一个应用程序级通讯协议。</p>
+<h3 id="Definitions"><a href="#Definitions" class="headerlink" title="Definitions"></a>Definitions</h3><blockquote>
+<p>协议设计在基于客户端/服务器的游戏中是最有趣的，这种游戏由若干不可信的客户端和一个可信的中央服务器通信。(Cheating在点对点的游戏中当然也是个问题，不过因为这样的游戏中没有节点是可信的，所以这种情况是没希望的)在客户端/服务器游戏中cheat的后果是非常严重的，因为服务器作为唯一的可信实体，维护游戏状态并且验证所有客户端命令。当游戏状态稳定后, 一次成功的cheat能够使包括上千个玩家的游戏变得不稳定。</p>
+<p>考虑在客户端/服务器系统中的协议安全性。客户端和服务器在网络通道中发送封包通信，网络通道或许可信(TCP),或许不可信(UDP).尽管客户端之间也能够直接通信，比如文字聊天或者声音，我们假定任何需要安全保证的数据只在客户端和服务器之间发送。</p>
+</blockquote>
+<h3 id="封包篡改-Packet-Tampering"><a href="#封包篡改-Packet-Tampering" class="headerlink" title="封包篡改(Packet Tampering)"></a>封包篡改(Packet Tampering)</h3><blockquote>
+<p>大多数协议hackers是偶然的：他们改变封包中的数个bytes,看看会发生什么。抵御此类攻击的第一道防线是简单的校验和。一个校验和是一个由封包所有的byte组合而成的一个短整数。发送者计算出封包的校验和并连同封包一起发送给接收者。接收者取得封包并重新计算校验和；如果和发送者的校验和不匹配，就认为封包被破坏了并抛弃之。在计算校验和时需要包含整个封包，包括header,这样接收者才能检测出header是否被破坏了。</p>
+<p>一个完美的校验和算法应该能够对封包中的任何字节改动产生不同的值。当然完美的校验和应该too long to be useful，hash函数有着相同的设计目标从而能够产生完美的校验和。单向的hash函数尤其有用，能够把输入变为混乱值，并且逆向重建输入是不可能的。MD5算法经过广泛的检测，被认为是足够快速的并能够胜任游戏使用的算法。其源代码可在网上找到。</p>
+<p>这种简单的校验和机制有两个缺点。第一，因为客户端执行文件包含校验和算法代码，攻击者能够逆向工程出此算法，从而可以为任何消息计算校验和。第二，攻击者能够截获封包并在稍后重发，这也被称为封包重发。</p>
+</blockquote>
+<h3 id="封包重发-Packet-Replay"><a href="#封包重发-Packet-Replay" class="headerlink" title="封包重发(Packet Replay)"></a>封包重发(Packet Replay)</h3><blockquote>
+<p>所谓封包重发，指的是那些不怀好意的玩家截获客户端发出的封包(通常使用某种封包嗅探器)，然后多次发送此包。<br>虽然客户端运用定时器检测机制能够阻止正常客户端过快发送命令，比如定时器没每秒最多发出一个指令，那么无论客户端多么频繁地截获玩家的命令(比如玩家疯狂地按键)，这些命令仍会每秒只发送一次。使用封包重发则是非正规渠道，他是在客户端控制之外重新发送封包，所以能够在一秒内发送相同的指令数百次。</p>
+<p>系统设计者也许会在服务器端使用同样每秒一次的定时器检测机制防御这种攻击。但是由于有网络延迟，这样做显得不切实际。因为虽然能够检测出大多数封包重发攻击，但是网络延迟可能会使多个正常封包同时到达服务器，这样就会引起合法命令被抛弃。我们当然不想我们的安全方案把合法玩家视为cheater。</p>
+<p>为了防范封包重发,每个封包应该包含一些状态信息,以使数据相同的封包也能有不同的位模式。随着发送封包而增长的数字能够担当此任，但此法太容易被攻击者破解。更好的方案是使用状态机为连续封包产生连续ID数。一个快速可信复杂的方法是使用线性同余的随机数产生器(通常在系统库中)。这种产生器工作如下：<br>State = ( State + a ) * b<br>其中a和b都是精心挑选的数字。</p>
+<p>发送者和接收者都为连接准备一个随机数发生器。发送一个封包时，发送者产生一个随机数并把它加入封包，同时更新随机数产生器。接收者检查到来封包中的随机数是否和自己随机数发生器匹配；如果不匹配，可以认为封包有问题；匹配则更新随机数发生器以为下一个封包做准备。</p>
+<p>此法有两个复杂度。<br>第一是发送者和接收者如何同步状态机，可以用相同的种子开始状态机，但是然后初始的封包流将一直有相同的位模式并且会很容易被破解。取而代之的是，服务器用一个随机的种子值初始化他的状态机并将此值作为第一个消息发给客户端。<br>第二个复杂度是如何保持状态机在通讯过程中同步。在可信连接上，封包绝不会丢失，可以保证同步。然而当封包会丢失或重组，状况有点复杂。如果一个消息丢失了，发送者状态机将比接收者快一步；接着的封包将被拒绝，尽管他们是合法的。一个简单的解决方案是依赖于随每个封包一起发送的一个真正的序列号(大多数游戏包含此号码在消息中，以在不可信transport上提供可信链接)。给定一个序列号，接收者可以判断他的状态机跳了多少步以接获当前封包。如果程序允许无序delivery,旧的状态机将不得不保存给一个无序封包到达时使用。</p>
+<p>大多数运行时库提供的rand函数作为一个状态机使用都不够准确因为它的精度太低(许多实现只有15位)并且它显然的选择作为一个源随机数。</p>
+</blockquote>
+<h3 id="其他的技术-Additional-Techniques"><a href="#其他的技术-Additional-Techniques" class="headerlink" title="其他的技术(Additional Techniques)"></a>其他的技术(Additional Techniques)</h3><blockquote>
+<p>理想状况下，两个具有相同payloads的封包应该在bit patterns上尽可能少的暴露相关性，以阻止攻击者对payload进行分析。消除两组数据所有相关性的一个简单方法是用一串随机bits组合他们，使用异或(XOR)操作。想象一下前面所描述的防御封包重发的方案，发送者和接收者已经同步了他们的随机数发生器。因此，发送者能够为每个封包产生一串随机数并把他们异或放进封包payload中；接收者产生同样的一串随机数然后用同样的方法获取原始的payload。<br>两个相同长度的封包的会留给给攻击者一条线索，那就是封包加密了类似的数据。为了进一步阻挡攻击者，封包可以包含一堆随机的”垃圾”数据，此数据只为改变封包长度。垃圾数据的长度通常由另一个状态机决定。发送者检查他的状态机来决定产生多少垃圾数据并将这些随机的bytes插入到即将发送的封包中。接收者简单的忽略这些垃圾数据。增加的垃圾数据进一步隐藏了payload但是耗费更多的带宽。那些受带宽限制的程序，垃圾数据的长度应该比 payload的平均长度更短。</p>
+</blockquote>
+<h3 id="逆向工程-Reverse-Engineering"><a href="#逆向工程-Reverse-Engineering" class="headerlink" title="逆向工程(Reverse Engineering)"></a>逆向工程(Reverse Engineering)</h3><blockquote>
+<p>address最困难的问题以及最终任何阻止篡改协议的方法的缺点就是客户端包含完全的加密算法并且总能够被逆向工程。下面的步骤能够用来使逆向工程更困难：</p>
+<ul>
+<li>发布的任何代码都不该包含任何符号和调试信息。</li>
+<li>不要把对缓冲区加密和解密分别放在他们自己的函数中；应该把它们和一些其他的网络代码放在一起。用可维护性换取安全性这里是值得考虑的。</li>
+<li>应该在运行时计算”魔法数”(不如初始化种子),而不要直接把他们的值放在执行文件中。</li>
+<li>在每个版本的客户端中都包含良好的加密方法，就算是早期的测试。如果某个版本客户端没有加密，用户就能够记录未加密的封包流，并用对封包payload的了解来破解下一个加密版本。</li>
+<li>记住你的目标是让cheating花大代价，而非杜绝cheating。</li>
+</ul>
+</blockquote>
+<h3 id="实现-Implementation"><a href="#实现-Implementation" class="headerlink" title="实现(Implementation)"></a>实现(Implementation)</h3><blockquote>
+<p>本文包含一个C++类SecureTransport,此类使用了所有之前描述过的技术。一个SecureTransport对象封装了发送者和接受者间的一个双向连接。对于每个方向，对象维护4个线性同余的随机数发生器作为协议状态机。这些被初始化为static值，服务器把随机数种子作为第一个消息发给客户端。此类像下面这样使用状态机：</p>
+<ol>
+<li>包头开始异或成员length。(这是不必要的如果底层协议提供封包长度,比如UDP)</li>
+<li>一个消息序列号被用来防止封包重发。</li>
+<li>在每个封包中决定垃圾数据的长度。</li>
+<li>产生随机bits来异或payload(加密).<br>一个独立的随机数发生器被用来产生实际的垃圾数据。在调试时，把垃圾数据设为一个常量是很有用的。</li>
+</ol>
+</blockquote>
+<h4 id="源码下载地址"><a href="#源码下载地址" class="headerlink" title="源码下载地址"></a>源码下载地址</h4><p><a href="http://download.csdn.net/download/sinat_28338727/10130031" target="_blank" rel="noopener">封装的socket Demo下载地址 </a></p>
+<h3 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h3><p>此文引用至网上某一篇论文，出处不详，在这里再次向作者（Andrew Kirmse）表达敬意以及歉意！<br>原文如下：<br>A Network Protocol for Online Games</p>
+<p>Andrew Kirmse</p>
+<p>Most encryption schemes assume that a trusted sender and a trusted recipient want to communicate over an untrusted channel.It seems absurd to suggest that the sender could deliberately try to fool the recipient, yet this is exactly the problem facing designers of online games.Some players cannot be trusted, and worse, they have complete access to the encryption algorithm and all communications via the client executable. Under such circumstances we cannot hope to provide completely secure communications, but we can make the attacker’s job more trouble than it’s worth. This article presents some pratical techniques for building and application-level communications protocol for online games.</p>
+<p>Definitions</p>
+<p>Protocol design is most interesting in client/server games, where one of more untrusted clients communicate with a trusted central server.(Cleating is certainly also a problem in peer-to-peer games, but because no entity is trusted in such games, the situation is hopeless)The consequences of cheating in a client/server game is high because the server, as the only trusted entity, maintains the game state and verifies all client commands.</p>
+<p>We consider protocol security features in a client/server system.The client and server communicate by sending packets over a network channel, which might be reliable(typically TCP) or unreliable(UDP). Although clients can also communicate directly with each other, perhaps for chat or voice, we assume that any data that need to be secured are sent only between a client and the server.</p>
+<p>Each packet contains two parts: the header, containing administrative information, and the payload, containing the actual data we want to communicate. The goal of the network protocol is to deliver the sender’s original payload to the recipient.Any modifications to the sender’s sequence of payloads should be detected.We deal only with delivery of the payload, leaving the details of packet ordering and reliablility to lower levels in the protocol stack.</p>
+<p>Packet Tampering</p>
+<p>Most protocol hackers are casual: they change bytes in a packet and see what happens. The first line of defense anainst such attacks is a simple checksum. A checksum is a short number produced by combining every byte of the packet.The sender computes the checksum of the packet and sends both the packet and the checksum to the recipient.The recipient takes the packer and recomputes its checksum;if the computed checksum doesn’t match the checksum from the sender, the packet is corrupt and should be rejected.It’s important to include the entire packet, including the header, in the checksum computation, so that the recipient can detect changes to the header as well as the payload.</p>
+<p>A perfect checksum computation would produce a different value if any byte of the packet were changed to any other value. A perfect checksum would be too long to be useful, of course, but hash functions have the same design goal and make excellent checksums. Particularly useful are one-way hash functions, which scramble their input to the extent that reconstructing any part of the input from the hash value is impossible for practical purposes. The MD5 algorithm is well tested, publicly available, and fast enough for use in games. A public domain implementation is available online[Plumb93].</p>
+<p>There are two weaknesses in this simple checksum mechanism. First, because the client executable contains the checksum computation code, and attacker can reverse engineer the checksum algorithm, and then compute valid checksums for any message. Second, and attacker can capture valid packets and resend them later, and attack known as packet replay.</p>
+<p>Packet Replay</p>
+<p>In a packet replay attack, a malicious user captures a packet from the client (typically using a packet sniffer), and sends it multiple times. A common tactic is to use packet replay to perform commands faster than game allows, even if there are timing checks in the client. For example, a client might use a timer to send a certain command to the server at most once per second, no matter how frequently the player issues the command. Using packet replay, a single user might issue the same command hundreds of times per second.</p>
+<p>A system designer might try to stop this particular attack by putting a similar once-per-second timer check on the server as well. In the face of widely variable network latency,howerer,this defense is impractical.Although it detects most packet replay attacks, varying network delays can make packets bunch together by the time they reach the server, causing legal command sequences to be rejected. We certainly do not want our security scheme to mark law-abiding players as cheaters.</p>
+<p>To guard against packet replay, each packet should contain some state information, so that even pakcets with identical payloads have different bit pattern. Something as simple as a number that increments with each sent packet would do, although that scheme is too easy for an attacker to figure out. A better answer is to use a state machine to produce successive identifying numbers for successive packets. A fast and resonably complicated method is a liner congruential random number generator of the type typically found in system libraries. Such generators operate as follows:<br>State = ( State + a ) * b<br>where a and b are carefully chosen integers. (For a discussion of this generators, see [Knuth98].)</p>
+<p>The sender and recipient each keep a liner congruential random number generator for their connections. When sending a packet, the sender produces a random number and adds it to the packet, simultaneously stepping its random number generator. The receiver checks the random number in the incomming packet against its generator; if the numbers don’t match, the packet has been tampered with. If the numbers do match, the receiver steps its random number generator to prepare for the next packet.</p>
+<p>There are two complications with this scheme. The first is how the sender and receiver initially synchronize their state machines.They could each start their state machines with same fixed seed, but then the initial stream of packets would always have the same bit patterns and thus would be vulnerable to analysis.Instead, the server can initialize its state machine with randomly generated seed values and send these to the client in its first message.</p>
+<p>The second complication is how to keep the state machines synchronized during communication. On a reliable connection, packets are never lost, so synchronization is guaranteed. When packets are dropped or reordered, howerver, the situation becomes more complicated. If a message is lost, the sender’s state machine will have advanced one more step than the receiver’s; subsequent packets will be rejected, even though they are legitimate. A simple solution is to rely on a true sequence number sent with each packet (most games include this number with messages anyway, toprovide a reliable connection over an unreliable trasport).Given a sequence number, the receiver can determine how many times to step its state machine to catch up to the current packet. If the application allows out-of-order delivery, the old state of the state machine will have to be stored for use when an out-of-order packet arrivers later.</p>
+<p>The rand function provided with most run-time libraries is inappropriate for use as a state machine because of its low precision (many implementations have only 15 bits) and its obvious choice as a source of random numbers. A fast, high-quality random number implementation is given in [Booth97].</p>
+<p>Additional Techniques</p>
+<p>Ideally, two packets with identical payloads should show as little correlation in their bit patterns as possible, to frustrate analysis of the payload. An easy way to remove all correlation betwen two sets of data is to combine them with a sequence of random bits, using the exclusive-or(XOR) operator.Assuming the previous described packet replay defense, the sender and receiver already have synchronized random number generators.Thus,the sender can generate a sequence of random number for each packet and XOR these into the packet payload; the receiver generates the same sequence of numbers and retrieves the original payload in the same way.</p>
+<p>Even the fact that two packets have the same length can give an attacker a clue that the packets encode similar data. To further frustrate attacks, each packet can contain a variable amout of random “junk” data, meant only to vary the length of the packet. The length of the junk data is determined by yet another synchronized state machine. The sender checks its state machine to determine how much junk to generate and insert that number of random bytes into an outgoing packet. The receiver simply ignores the junk data.Increasing the amount of junk data helps to further hide the payload but costs additional bandwidth. In typical applications in which bandwidth is limited, the average length of junk data should be made small compared to the average payload size.</p>
+<p>Reverse Engineering</p>
+<p>The hardest problem to address, and ultimately the downfall of any scheme to stop protocol tampering, is that the client contains the entire encryption algorithm and thus can always be reverse engineered. Some steps you can take to make reverse engineering harder are as follows:</p>
+<ul>
+<li>Remove all symbols and debugging information from any code released to the public.</li>
+<li>Don’t isolate buffer encryption and decryption in their own function; instead, combine there with some other network code. This is one area in which it can be worthwhile to trade maintainability for security.</li>
+<li>Compute “magic numbers” (such as initialization seeds) at run time instead of placing their values directly in the executable.</li>
+<li>Include a good encryption scheme in every version of the client, even early betas. If any client version lacks encryption, a user can record a stream of unencrypted packets from one client and then use knowledge of the packet payload to help break the encryption in a later version.</li>
+<li>Remember that your goal is to make cheating prohibitively expensive, not impossible.</li>
+</ul>
+<p>Implementation</p>
+<p>The implementation included with this article includes a C++ class SecureTransport that uses all the previously described techniques. A SecureTransport object encapsulates a two-way connection between a sender and a recipient. For each direction, the object maintains four linear congruential random number generators as protocol state machines. These are initialized to static values, with the understanding that the server would send random seeds in its first message to the client. The class uses the state machines as follows:</p>
+<ol>
+<li>It XORs the length field at the start of the header. (This is unnecessary if the underlying protocol provides a packet length as in UDP.)</li>
+<li>A message sequence number is used to prevent packet replay.</li>
+<li>It determines the length of junk data in each packet.</li>
+<li>It generates random bits to XOR the payload.</li>
+</ol>
+<p>A separate random number generator is used to generate the actual junk data. During debugging, it is useful to set the junk data to a known constant value.</p>
+<p>References<br>[Booth97]  Booth,Rick,Inner Loops, Addison-Wesley Developers Press, 1997.<br>[Knuth98] Kunth,Donald,The Art of Computer Programming,Volume 2: Seminnmcrical Algorithms, third edition. Addision-Wesley Longman, Inc, 1998<br>[Plumb93] Plumb,Colin,”md5.c” available online at <a href="http://src.openresources.com/debian/src/admin/html/s/rpm_2.4.12.orig%20rpm-2.4.12%20lib%20md5.c.html" target="_blank" rel="noopener">http://src.openresources.com/debian/src/admin/html/s/rpm_2.4.12.orig%20rpm-2.4.12%20lib%20md5.c.html</a> 1993</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>Enjoy it ? Donate for it !  欣赏此文？求鼓励，求支持！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="http://image.hoacaini.com/blog/wechat.png" alt="阿西BUG WeChat Pay">
+          <p>微信打赏</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="http://image.hoacaini.com/blog/alipay.png" alt="阿西BUG Alipay">
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/05/19/可变函数/" rel="next" title="可变参数函数">
+                <i class="fa fa-chevron-left"></i> 可变参数函数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/12/19/从0开始搭建ss多用户控流vps/" rel="prev" title="从0开始搭建ss多用户控流vps">
+                从0开始搭建ss多用户控流vps <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="http://image.hoacaini.com/blog/HeadPic.png" alt="阿西BUG">
+          <p class="site-author-name" itemprop="name">阿西BUG</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/92Yu" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/sinat_28338727" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  CSDN
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://www.allknowboy.com" title="包打听" target="_blank">包打听</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.kuokuo666.com/" title="阔阔" target="_blank">阔阔</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="https://qilinzi.blog.csdn.net/" title="麒麟子_CSDN" target="_blank">麒麟子_CSDN</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Definitions"><span class="nav-number">2.</span> <span class="nav-text">Definitions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#封包篡改-Packet-Tampering"><span class="nav-number">3.</span> <span class="nav-text">封包篡改(Packet Tampering)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#封包重发-Packet-Replay"><span class="nav-number">4.</span> <span class="nav-text">封包重发(Packet Replay)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他的技术-Additional-Techniques"><span class="nav-number">5.</span> <span class="nav-text">其他的技术(Additional Techniques)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逆向工程-Reverse-Engineering"><span class="nav-number">6.</span> <span class="nav-text">逆向工程(Reverse Engineering)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现-Implementation"><span class="nav-number">7.</span> <span class="nav-text">实现(Implementation)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#源码下载地址"><span class="nav-number">7.1.</span> <span class="nav-text">源码下载地址</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写在最后"><span class="nav-number">8.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">阿西BUG</span>
+</div>
+<div class="BbeiAn-info">
+鄂ICP备 - 
+<a href="http://www.miit.gov.cn" style="font-weight: bold"> 18007824号 </a>
+</div>
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      人次
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (search_path.endsWith("json")) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      $('#local-search-input').focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- show little heart when click -->
+<script type="text/javascript" src="/js/src/love.js"></script>>
